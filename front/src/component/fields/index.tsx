@@ -1,4 +1,5 @@
-import  { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import "./index.css";
 
 const RegisterForm: React.FC = () => {
@@ -6,13 +7,14 @@ const RegisterForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    const newUser = {    
+    const newUser = {
       email: (e.target as any).elements.email.value,
       password: (e.target as any).elements.password.value,
     };
@@ -20,7 +22,7 @@ const RegisterForm: React.FC = () => {
     console.log("newUser:", newUser);
 
     try {
-      const response = await fetch('http://localhost:3000/user-create', {
+      const response = await fetch('http://localhost:4000/user-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,6 +36,7 @@ const RegisterForm: React.FC = () => {
 
       const result = await response.json();
       setSuccess(result.message);
+      navigate(`/verify-email?email=${newUser.email}`);
     } catch (error) {
       setError('Registration failed. Please try again.');
     }
@@ -41,7 +44,6 @@ const RegisterForm: React.FC = () => {
 
   return (
     <form className="form" onSubmit={handleSubmit} method='POST' action=''>
-    
       <div className="form-container">
         <label className="form-container__subtitle">Email</label>
         <input
@@ -63,6 +65,9 @@ const RegisterForm: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+      </div>
+      <div className='form-link'>
+        <p className='form-link__text'>Already have an account? <a href='.#' className='form-link__link'> Sign In</a> </p>
       </div>
       <button className="form__button" type="submit">Continue</button>
       {error && <p className="error">{error}</p>}
