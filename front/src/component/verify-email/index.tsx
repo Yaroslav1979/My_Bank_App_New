@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import Button from "../button"
 import "./index.css";
 
 const VerifyEmail: React.FC = () => {
@@ -52,7 +54,8 @@ const VerifyEmail: React.FC = () => {
           required
         />
       </div>
-      <button className="form__button" type="submit">Confirm</button>
+      <Button>Confirm</Button>
+      {/* <button className="form__button" type="submit">Confirm</button> */}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
     </form>

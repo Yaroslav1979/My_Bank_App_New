@@ -2,6 +2,8 @@ import React from "react";
 import Title from "../../component/title"
 import RegisterForm from '../../component/fields';
 import Subtitle from "../../component/subtitle";
+import Page from "../../component/page"
+
 import "./index.css";
 
 
@@ -13,10 +15,12 @@ export default function Container(
     id?: string,    
   } ): JSX.Element {
     return (
-    <div className="head">     
-    <Title>Confirm account {children} </Title>
-    <Subtitle> Write the code you received </Subtitle>
-    <RegisterForm />     
-  </div>
+      <Page>
+      <div className="head">     
+        <Title>Confirm account {children} </Title>
+        <Subtitle> Write the code you received </Subtitle>
+        <RegisterForm />     
+      </div> 
+      </Page>   
   );
 }

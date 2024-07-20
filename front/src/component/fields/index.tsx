@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import Button from "../button"
 import "./index.css";
 
 const RegisterForm: React.FC = () => {
@@ -69,7 +71,8 @@ const RegisterForm: React.FC = () => {
       <div className='form-link'>
         <p className='form-link__text'>Already have an account? <a href='.#' className='form-link__link'> Sign In</a> </p>
       </div>
-      <button className="form__button" type="submit">Continue</button>
+      <Button>Continue</Button>
+      {/* <button className="form__button" type="submit">Continue</button> */}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
     </form>
