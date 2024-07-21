@@ -1,9 +1,8 @@
 import React, { useContext, ReactNode } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-// import Page from "./component/page";
 import SignupPage from "./container/user-create";
 import WellcomePage from "./container/start-page";
-// import SigninPage from "./container/signin-page";
+import SigninPage from "./container/user-enter";
 // import RecoveryPage from "./container/recovery-page";
 // import RecoveryConfirmPage from "./container/recovery-confirm-page";
 // import BalancePage from "./container/balance-page";
@@ -13,10 +12,10 @@ import WellcomePage from "./container/start-page";
 // import SendPage from "./container/send-page";
 // import TransactionPage from "./container/transaction-page";
 // import Error from "./component/error-page";
-import SignupConfirmPage from "./container/user-confirm";
+// import SignupConfirmPage from "./container/user-confirm";
 import { AuthProvider, AuthContext } from './context/authContext';
 
-import VerifyEmail from "./component/verify-email";
+import VerifyEmail from "./container/verify-email";
 import Success from "./component/success";
 
 
@@ -81,15 +80,16 @@ const App: React.FC = () => {
               path="/user-confirm"
               element={
                 <PrivateRoute>
-                  <SignupConfirmPage />
+                  <Success />
+                  {/* <SignupConfirmPage /> */}
                 </PrivateRoute>
               }
             />
-            {/* <Route
-              path="/signin"
+            <Route
+              path="/user-enter"
               element={<SigninPage />}
             />
-            <Route
+            {/* <Route
               path="/recovery"
               element={
                 <AuthRoute>

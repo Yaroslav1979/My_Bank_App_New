@@ -19,7 +19,7 @@ export default function Container(
       <section className="start"> 
       <img src={background} alt="backgrond" className="bgd-main" />
       <img src={picture} alt="backgrond" className="bgd-second" />
-      <div className="head">     
+      <div className="head head__start">     
         <Title> <div className="title__intro"> Hellow! </div></Title>
         <Subtitle > <div className="subtitle__intro"> Wellcome to bank app</div> </Subtitle>
       </div>

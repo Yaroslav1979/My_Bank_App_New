@@ -67,3 +67,5 @@ src/.DS_Store
 /public/dist
 public/dist
 dist
+
+.env

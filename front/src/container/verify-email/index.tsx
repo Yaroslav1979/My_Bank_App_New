@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-import Button from "../button"
+import Page from "../../component/page";
+import Button from "../../component/button";
+import Title from '../../component/title';
+import Subtitle from '../../component/subtitle';
 import "./index.css";
 
 const VerifyEmail: React.FC = () => {
@@ -27,8 +29,6 @@ const VerifyEmail: React.FC = () => {
         body: JSON.stringify({ email, verificationCode }),
       });
 
-      
-
       if (!response.ok) {
         throw new Error('Verification failed');
       }
@@ -43,22 +43,28 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
-      <div className="form-container">
-        <label className="form-container__subtitle">Code</label>
-        <input
-          className="form-container__field"
-          type="text"
-          value={verificationCode}
-          onChange={(e) => setVerificationCode(e.target.value)}
-          required
-        />
-      </div>
-      <Button>Confirm</Button>
-      {/* <button className="form__button" type="submit">Confirm</button> */}
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
-    </form>
+    <Page>
+      <div className="head">     
+        <Title>Confirm account</Title>
+        <Subtitle> Write the code you received </Subtitle>            
+      </div> 
+      <form className="form" onSubmit={handleSubmit}>
+        <div className="form-container">
+          <label className="form-container__subtitle">Code</label>
+          <input
+            className="form-container__field"
+            type="text"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            required
+          />
+        </div>
+        <Button>Confirm</Button>
+        {/* <button className="form__button" type="submit">Confirm</button> */}
+        {error && <p className="error">{error}</p>}
+        {success && <p className="success">{success}</p>}
+      </form>
+    </Page>
   );
 };
 

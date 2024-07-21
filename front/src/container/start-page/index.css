@@ -36,7 +36,7 @@
    right: -300px;  
 }
 
-.head {
+.head__start {
     display: flex;
     justify-content: center;
     position: relative;
