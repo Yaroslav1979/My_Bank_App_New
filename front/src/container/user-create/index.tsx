@@ -1,32 +1,40 @@
-import React from "react";
-import Title from "../../component/title"
-import RegisterForm from '../../component/fields';
+import React, { useState } from 'react';
+import Title from "../../component/title";
+import RegisterForm from '../../component/register-form';
 import Subtitle from "../../component/subtitle";
-import warning from "../../svg/warning.svg";
+import FormLink from "../../component/form-link";
 import Page from "../../component/page";
+import warning from "../../svg/warning.svg";
 import "./index.css";
 
+interface ContainerProps {
+  children?: React.ReactNode;      
+}
 
-export default function Container(
-  {children}: {children?: React.ReactNode,
-    onCreate?: boolean,
-    placeholder?: string,
-    button?: boolean,
-    id?: string,    
-  } ): JSX.Element {
-    return (
-      
-   <Page>     
+const Container: React.FC<ContainerProps> = ({children}) => {
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+  const handleError = (message: string) => {
+    setWarningMessage(message);
+  };
+
+  return (
+    <Page>     
       <div className="head">     
-        <Title>Sign up </Title>
-        <Subtitle> Choose a registration method </Subtitle>
+        <Title>Sign up</Title>
+        <Subtitle>Choose a registration method</Subtitle>
       </div>
-    <RegisterForm />
-    <span className="warning">
-      <img src={warning} alt="error"/> <span>A user with the same name is already exist</span>
-    </span> 
-      
+      <RegisterForm onError={handleError}>
+        <FormLink text="Already have an account? " linkText="Sign In" linkHref='/user-enter' />
+      </RegisterForm> 
+      {warningMessage && (
+        <span className="warning">
+          <img src={warning} alt="error" /> <span>{warningMessage}</span>
+        </span>
+      )}
+      {children} 
     </Page>
-    
   );
 }
+
+export default Container;

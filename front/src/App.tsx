@@ -3,8 +3,8 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import SignupPage from "./container/user-create";
 import WellcomePage from "./container/start-page";
 import SigninPage from "./container/user-enter";
-// import RecoveryPage from "./container/recovery-page";
-// import RecoveryConfirmPage from "./container/recovery-confirm-page";
+import RecoveryPage from "./container/recovery";
+import RecoveryConfirmPage from "./container/recovery-confirm";
 // import BalancePage from "./container/balance-page";
 // import NotificationsPage from "./container/notifications-page";
 // import SettingsPage from "./container/settings-page";
@@ -89,15 +89,15 @@ const App: React.FC = () => {
               path="/user-enter"
               element={<SigninPage />}
             />
-            {/* <Route
+            <Route
               path="/recovery"
               element={
                 <AuthRoute>
                   <RecoveryPage />
                 </AuthRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/recovery-confirm"
               element={
                 <AuthRoute>
@@ -105,7 +105,7 @@ const App: React.FC = () => {
                 </AuthRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/balance"
               element={
                 <PrivateRoute>

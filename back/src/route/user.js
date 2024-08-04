@@ -175,7 +175,144 @@ router.post('/user-enter', function (req, res) {
   }
 });
 
-//---------------------------------------------
+//--------------------------------------------
+
+// const nodemailer = require('nodemailer'); // For sending emails
+
+// Your user model and other necessary imports
+
+router.post('/recovery', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Check if the email exists in the database
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    // Generate a verification code or token
+    const verificationCode = Math.floor(100000 + Math.random() * 900000); // Example code
+
+    // Save the verification code in the user's record in the database
+    user.resetPasswordCode = verificationCode;
+    await user.save();
+
+     // Виведення коду в консоль замість відправки на email
+     console.log(`Verification code for ${email}: ${verificationCode}`);
+
+    // Send the verification code to the user's email
+    // const transporter = nodemailer.createTransport({
+    //   service: 'Gmail', // or another email service
+    //   auth: {
+    //     user: process.env.EMAIL_USERNAME,
+    //     pass: process.env.EMAIL_PASSWORD,
+    //   },
+    // });
+
+    // const mailOptions = {
+    //   from: process.env.EMAIL_USERNAME,
+    //   to: email,
+    //   subject: 'Password Reset Request',
+    //   text: `Your verification code is: ${verificationCode}`,
+    // };
+
+    // await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Verification code sent to your email' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//------------------------------------------------
+
+router.post('/verify-code', async (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  try {
+    // Знаходимо користувача за електронною адресою
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Перевіряємо, чи код верифікації співпадає
+    if (user.resetPasswordCode !== verificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    // Якщо код правильний, повертаємо успішну відповідь
+    res.json({ message: 'Verification code is correct' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//--------------------------------------------------
+
+// const bcrypt = require('bcrypt'); // Для хешування паролів
+
+// router.post('/recovery-confirm', async (req, res) => {
+//   const { email, verificationCode, newPassword } = req.body;
+
+//   try {
+//     // Знаходимо користувача за електронною адресою
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     // Перевіряємо, чи код верифікації співпадає
+//     if (user.resetPasswordCode !== verificationCode) {
+//       return res.status(400).json({ message: 'Invalid verification code' });
+//     }
+
+//     // Хешуємо новий пароль
+//     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+//     // Оновлюємо пароль користувача
+//     user.password = hashedPassword;
+//     user.resetPasswordCode = undefined; // Видаляємо код верифікації після успішної зміни пароля
+//     await user.save();
+
+//     res.json({ message: 'Password has been reset successfully' });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+router.post('/recovery-confirm', async (req, res) => {
+  const { email, verificationCode, newPassword } = req.body;
+
+  try {
+    // Знаходимо користувача за електронною адресою
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Перевіряємо, чи код верифікації співпадає
+    if (user.resetPasswordCode !== verificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    // Тимчасово зберігаємо пароль без хешування
+    user.password = newPassword;
+    user.resetPasswordCode = undefined; // Видаляємо код верифікації після успішної зміни пароля
+    await user.save();
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//-------------------------------------------------
 
 // Експортуємо глобальний роутер
 module.exports = router

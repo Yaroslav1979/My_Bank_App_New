@@ -1,7 +1,18 @@
-import "./index.css";
+import { useNavigate } from 'react-router-dom';
+import './index.css';
 
-export default function ArrowBack({children}) {
-    return (
-    <div className="arrow"> <button> {children} </button></div> 
-     );
-}
+const ArrowBack = ({ children }) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  return (    
+      <button onClick={handleBack} className="arrow">
+        {children}
+      </button>    
+  );
+};
+
+export default ArrowBack;

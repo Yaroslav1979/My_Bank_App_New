@@ -1,9 +1,15 @@
-import "./index.css";
 import React from "react";
+import "./index.css";
 
+interface ButtonProps {
+  children?: React.ReactNode;
+  className?: string;
+}
 
-export default function Button({children}: {children?: React.ReactNode}): JSX.Element {
-    return (    
-       <button className="form__button" type="submit">{children}</button> 
-   )
+export default function Button({ children, className }: ButtonProps): JSX.Element {
+  return (
+    <button className={`form__button ${className}`} type="button">
+      {children}
+    </button>
+  );
 }

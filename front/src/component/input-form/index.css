@@ -1,0 +1,24 @@
+.form-container__field {
+    width: 100%;
+    height: 54px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 20px 16px;    
+}
+.form-container__input-wrapper {
+    position: relative;
+  }
+  
+  .form-container__toggle-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .form-container__icon {
+    width: 24px;
+    height: 24px;
+  }
