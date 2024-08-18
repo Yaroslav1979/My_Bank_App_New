@@ -43,6 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
+    console.log('Token in state:', state.token);
     if (state.token) {
       localStorage.setItem("authToken", state.token);
     } else {

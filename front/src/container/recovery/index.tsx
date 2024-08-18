@@ -4,7 +4,7 @@ import Page from "../../component/page";
 import Button from "../../component/button";
 import Title from '../../component/title';
 import Subtitle from '../../component/subtitle';
-import FormInput from '../../component/input-form';
+import FormInput from '../../component/form-input';
 import "./index.css";
 
 const RecoveryPage: React.FC = () => {

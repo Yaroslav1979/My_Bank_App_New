@@ -5,7 +5,7 @@ import WellcomePage from "./container/start-page";
 import SigninPage from "./container/user-enter";
 import RecoveryPage from "./container/recovery";
 import RecoveryConfirmPage from "./container/recovery-confirm";
-// import BalancePage from "./container/balance-page";
+import BalancePage from "./container/balance";
 // import NotificationsPage from "./container/notifications-page";
 // import SettingsPage from "./container/settings-page";
 // import RecivePage from "./container/recive-page";
@@ -22,6 +22,7 @@ import Success from "./component/success";
 
 const AuthRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   const authContext = useContext(AuthContext);
+  console.log('Auth state:', authContext);
 
   if (authContext && authContext.state.token) {
     return <Navigate to="/balance" />;
@@ -31,12 +32,15 @@ const AuthRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const PrivateRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const authContext = useContext(AuthContext);
+  const authContext = useContext(AuthContext); 
+  console.log('Auth state in PrivateRoute:', authContext?.state);
+
 
   if (!authContext || !authContext.state.token) {
-    return <Navigate to="/signin" />;
+    console.log('Token not found, redirecting to /user-enter');
+    return <Navigate to="/user-enter" />;   
   }
-
+  
   return <>{children}</>;
 };
 
@@ -105,14 +109,14 @@ const App: React.FC = () => {
                 </AuthRoute>
               }
             />
-            {/* <Route
+            <Route
               path="/balance"
               element={
                 <PrivateRoute>
                   <BalancePage />
                 </PrivateRoute>
               }
-            /> */}
+            />
             {/* <Route
               path="/notifications"
               element={

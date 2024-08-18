@@ -1,29 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FormInput from '../input-form';
+import FormInput from '../form-input';
 import Button from "../button";
-// import Modal from '../modal';
 import "./index.css";
 
 interface RegisterFormProps {
   onError: (message: string) => void;
-  children?: React.ReactNode;
+  children?: React.ReactNode; // Додано пропс для children
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  // const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
-
-    const newUser = { email, password };
 
     try {
       const response = await fetch('http://localhost:4000/user-create', {
@@ -31,29 +25,23 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const errorResult = await response.json();
+        throw new Error(errorResult.message || 'Registration failed');
       }
 
       const result = await response.json();
-      setSuccess(result.message);
-      // setShowModal(true);
-      setTimeout(() => {
-        navigate(`/verify-email?email=${newUser.email}`);
-      }, 2000);
+      console.log(result.message);
+
+      // Направлення користувача на сторінку верифікації з передачею email
+      navigate('/verify-email', { state: { email } });
     } catch (error) {
-      const errorMessage = 'Registration failed. Please try again.';
-      setError(errorMessage);
-      onError(errorMessage);
+      onError((error as Error).message);
     }
   };
-
-  // const closeModal = () => {
-  //   setShowModal(false);
-  // };
 
   return (
     <div>
@@ -66,6 +54,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            // placeholder="Enter your email"
           />
         </div>
         <div className="form-container">
@@ -76,20 +65,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            // placeholder="Enter your password"
           />
         </div>
-        <Button>Continue</Button>
+        <Button type="submit">Continue</Button>
         {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
       </form>
-      {/* {showModal && 
-        <Modal 
-          message="Registration was successful!" 
-          onClose={closeModal} 
-          type="success"
-        />
-      } */}
-      {children}
+      {children} {/* Додано підтримку children */}
     </div>
   );
 };

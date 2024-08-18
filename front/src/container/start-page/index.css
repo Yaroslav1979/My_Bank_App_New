@@ -29,8 +29,7 @@
     border-radius: 12px 12px 32px 32px;
 }
 
-.bgd-second {
-    
+.bgd-second {    
     display: flex;
     position: absolute;
    right: -300px;  

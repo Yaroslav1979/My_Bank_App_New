@@ -92,8 +92,13 @@ router.post('/verify-email', function (req, res) {
     if (user && user.verificationCode === parseInt(verificationCode)) {
       user.isVerified = true;
 
-        return res.status(200).json({
+      // Генерація токена після успішної верифікації
+      const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
+      user.token = token; // Збереження токена в користувача
+
+      return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
+        token: token  // Повертаємо токен в відповіді
       });
     } else {
       return res.status(400).json({
@@ -109,72 +114,117 @@ router.post('/verify-email', function (req, res) {
 });
 // ---------------------------------------------
 
+// router.post('/user-enter', function (req, res) {
+//   try {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//       return res.status(400).json({
+//         message: 'Потрібно ввести email та пароль щоб увійти в аккаунт'
+//       });
+//     }
+     
+//     const user = User.getByEmail(email);
+//     if (!user) {
+//       return res.status(400).json({
+//         message: 'Користувача з таким email не знайдено'
+//       });
+//     }
+
+//     if (!user.verifyPassword(password)) {
+//       return res.status(401).json({
+//         message: 'Невірний пароль'
+//       });
+//     }
+
+//     if (!user.isVerified) {
+//       return res.status(400).json({
+//         message: 'Користувач не верифікований'
+//       });
+//     }   
+
+//       // Створення токену на 30 днів
+//     const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
+//     TokenStore.saveToken(user.email, token); // Зберігання токену у базі даних
+    
+//     console.log('Ви увійшли в аккаунт:', user);
+
+//     // Відправка коду верифікації електронною поштою
+//     // const mailOptions = {
+//     //   from: 'your-email@gmail.com',
+//     //   to: email,
+//     //   subject: 'Verification Code',
+//     //   text: `Your verification code is: ${verificationCode}`
+//     // };
+
+//     // transporter.sendMail(mailOptions, function (error, info) {
+//     //   if (error) {
+//     //     console.error('Помилка при відправці коду верифікації:', error);
+//     //     return res.status(500).json({
+//     //       message: 'Не вдалося відправити код верифікації'
+//     //     });
+//     //   } else {
+//         // console.log('Код верифікації відправлено: ' + info.response);
+//        return res.status(200).json({
+//       message: 'Ви успішно увійшли в аккаунт',
+//       token: token
+//     });
+        
+//     //   }
+//     // });
+//   }  catch (e) {
+//     console.error('Помилка при вході в аккаунт:', e);
+//     return res.status(500).json({
+//       message: 'Не вдалося увійти в аккаунт'
+//     });
+//   }
+// });
+
+
 router.post('/user-enter', function (req, res) {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
-        message: 'Потрібно ввести email та пароль щоб увійти в аккаунт'
+        message: 'Потрібно ввести email та пароль, щоб увійти в аккаунт',
       });
     }
-     
+
     const user = User.getByEmail(email);
     if (!user) {
       return res.status(400).json({
-        message: 'Користувача з таким email не знайдено'
+        message: 'Користувача з таким email не знайдено',
       });
     }
 
     if (!user.verifyPassword(password)) {
       return res.status(401).json({
-        message: 'Невірний пароль'
+        message: 'Невірний пароль',
       });
     }
 
     if (!user.isVerified) {
       return res.status(400).json({
-        message: 'Користувач не верифікований'
+        message: 'Користувач не верифікований',
       });
-    }   
+    }
 
-      // Створення токену на 30 днів
-    const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
-    TokenStore.saveToken(user.email, token); // Зберігання токену у базі даних
-    
-    console.log('Ви увійшли в аккаунт:', user);
+    // Якщо користувач успішно пройшов усі перевірки, ми повертаємо повідомлення про успішний вхід
+    // Тут ми не генеруємо новий токен, оскільки він був згенерований під час верифікації
 
-    // Відправка коду верифікації електронною поштою
-    // const mailOptions = {
-    //   from: 'your-email@gmail.com',
-    //   to: email,
-    //   subject: 'Verification Code',
-    //   text: `Your verification code is: ${verificationCode}`
-    // };
-
-    // transporter.sendMail(mailOptions, function (error, info) {
-    //   if (error) {
-    //     console.error('Помилка при відправці коду верифікації:', error);
-    //     return res.status(500).json({
-    //       message: 'Не вдалося відправити код верифікації'
-    //     });
-    //   } else {
-        // console.log('Код верифікації відправлено: ' + info.response);
-       return res.status(200).json({
+    return res.status(200).json({
       message: 'Ви успішно увійшли в аккаунт',
-      token: token
+      token: user.token, // Ми можемо повернути токен, який уже є у користувача
     });
-        
-    //   }
-    // });
-  }  catch (e) {
+    
+  } catch (e) {
     console.error('Помилка при вході в аккаунт:', e);
     return res.status(500).json({
-      message: 'Не вдалося увійти в аккаунт'
+      message: 'Не вдалося увійти в аккаунт',
     });
   }
 });
-
 //--------------------------------------------
 
 // const nodemailer = require('nodemailer'); // For sending emails

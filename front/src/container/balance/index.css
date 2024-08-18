@@ -1,0 +1,56 @@
+.title__balance {
+    font-size: 34px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.subtitle__balance {
+    font-size: 16px;
+    font-weight: 400;
+    color: #F3F5FF
+}
+
+.bgd-small {
+    display: flex;
+    position: absolute;
+    left: 0;
+    width: 392px;
+    height: 200px;
+    border-radius: 12px 12px 0 0;
+    z-index: -1;
+}
+
+.balance {
+    position: relative;
+}
+
+.subhead {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 60px;
+    align-items: center;
+}
+
+.head__balance {
+   margin: 0 20px 0 20px;
+}
+ 
+.buttons__wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0 36px 0;
+    gap: 32px;
+}
+
+.icon__transaction {
+    width: 72px;
+    height: 72px;
+    padding: 10px;
+    background-color: #5B94E9;
+    border: 10px solid white;
+    border-radius: 50%;
+}
+
+  
+  
+  

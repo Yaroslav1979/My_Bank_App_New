@@ -1,0 +1,46 @@
+.transaction-row {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .transaction-logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  .transaction-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .transaction-name {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .transaction-time {
+    font-size: 12px;
+    color: #888;
+  }
+  
+  .transaction-type {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .transaction-amount {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .transaction-amount.positive {
+    color: green;
+  }
+  
+  .transaction-amount.negative {
+    color: red;
+  }
