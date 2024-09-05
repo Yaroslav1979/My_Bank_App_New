@@ -8,6 +8,7 @@ import NotificationsButton from "../../svg/bell-white.svg";
 import Transaction from "../../component/transaction";
 import ReceiveButton from "../../svg/arrow-down-right.svg";
 import SendButton from "../../svg/people-upload.svg";
+import FormLink from "../../component/form-link";
 
 import "./index.css";
 
@@ -26,10 +27,12 @@ export default function Container(
         <div className="subhead">
         <img src={SetingsButton} alt="Setings" className="icon" />
         <Subtitle > <div className="subtitle__balance"> Main wallet</div> </Subtitle>
-        <img src={NotificationsButton} alt="Notifications" className="icon" />
+        
+        <FormLink linkHref="/notifications" linkText={<img src={NotificationsButton} alt="Notifications" className="icon" />} />
+        
       </div>
 
-        <Title> <div className="title__balance ">$ <span className="dollar">{`${100}`}<span className="cent">`${.00}`</span ></span> </div></Title>
+        <Title> <div className="title__balance ">$ <span className="dollar">{`${100}`}<span className="cent">{`.00`}</span ></span> </div></Title>
       </div>
 
       <div className="buttons__wrapper">
@@ -48,19 +51,20 @@ export default function Container(
               
       <div>
       <Transaction
-        logo="https://example.com/logo.png"
-        name="John Doe"
-        time="2024-08-06 12:34"
-        type="Receipt"
-        amount={+100.50}
+        logo="../../svg/stripe.svg"
+        name="Stripe"
+        time="12:25"
+        type="Sending"
+        amount={+125.00}
       />
       <Transaction
-        logo="https://example.com/logo.png"
-        name="PayPal"
-        time="2024-08-05 09:21"
-        type="Sending"
-        amount={-50.75}
+        logo="../../svg/human.svg"
+        name="Oleg V."
+        time="12:25"
+        type="Receipt"
+        amount={-200.50}
       />
+     
     </div>
         
       </div>

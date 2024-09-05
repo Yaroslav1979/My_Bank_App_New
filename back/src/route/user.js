@@ -98,7 +98,7 @@ router.post('/verify-email', function (req, res) {
 
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
-        token: token  // Повертаємо токен в відповіді
+        token: token  
       });
     } else {
       return res.status(400).json({
@@ -210,12 +210,11 @@ router.post('/user-enter', function (req, res) {
       });
     }
 
-    // Якщо користувач успішно пройшов усі перевірки, ми повертаємо повідомлення про успішний вхід
-    // Тут ми не генеруємо новий токен, оскільки він був згенерований під час верифікації
+    
 
     return res.status(200).json({
       message: 'Ви успішно увійшли в аккаунт',
-      token: user.token, // Ми можемо повернути токен, який уже є у користувача
+      token: user.token,
     });
     
   } catch (e) {
@@ -282,19 +281,16 @@ router.post('/verify-code', async (req, res) => {
   const { email, verificationCode } = req.body;
 
   try {
-    // Знаходимо користувача за електронною адресою
-    const user = await User.findOne({ email });
+     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Перевіряємо, чи код верифікації співпадає
     if (user.resetPasswordCode !== verificationCode) {
       return res.status(400).json({ message: 'Invalid verification code' });
     }
 
-    // Якщо код правильний, повертаємо успішну відповідь
     res.json({ message: 'Verification code is correct' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

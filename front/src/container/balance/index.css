@@ -51,6 +51,8 @@
     border-radius: 50%;
 }
 
-  
+  .icon {
+    cursor: pointer;
+  }
   
   

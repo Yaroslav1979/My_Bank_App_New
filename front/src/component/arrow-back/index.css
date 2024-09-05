@@ -1,6 +1,6 @@
 .arrow {
    background-image: url(../../../public/svg/arrow-back.svg);
-   width: 20px;
-   height: 20px;
-   cursor: pointer;
-}
+   width: 24px;
+   height: 24px;
+   cursor: pointer;     
+ }

@@ -28,8 +28,8 @@ import { Link } from "react-router-dom";
 import "./index.css";
 
 interface FormLinkProps {
-  text: string; 
-  linkText: string; 
+  text?: string; 
+  linkText?: React.ReactNode; 
   linkHref: string; 
 }
 

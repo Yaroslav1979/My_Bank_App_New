@@ -6,7 +6,7 @@ import SigninPage from "./container/user-enter";
 import RecoveryPage from "./container/recovery";
 import RecoveryConfirmPage from "./container/recovery-confirm";
 import BalancePage from "./container/balance";
-// import NotificationsPage from "./container/notifications-page";
+import Notifications from "./container/notifications";
 // import SettingsPage from "./container/settings-page";
 // import RecivePage from "./container/recive-page";
 // import SendPage from "./container/send-page";
@@ -117,15 +117,15 @@ const App: React.FC = () => {
                 </PrivateRoute>
               }
             />
-            {/* <Route
+            <Route
               path="/notifications"
               element={
                 <PrivateRoute>
-                  <NotificationsPage />
+                  <Notifications />
                 </PrivateRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/settings"
               element={
                 <PrivateRoute>
