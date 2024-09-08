@@ -9,7 +9,7 @@ import BalancePage from "./container/balance";
 import Notifications from "./container/notifications";
 // import SettingsPage from "./container/settings-page";
 // import RecivePage from "./container/recive-page";
-// import SendPage from "./container/send-page";
+import SendSum from "./container/send";
 // import TransactionPage from "./container/transaction-page";
 // import Error from "./component/error-page";
 // import SignupConfirmPage from "./container/user-confirm";
@@ -140,15 +140,15 @@ const App: React.FC = () => {
                   <RecivePage />
                 </PrivateRoute>
               }
-            />
+            /> */}
             <Route
               path="/send"
               element={
                 <PrivateRoute>
-                  <SendPage />
+                  <SendSum />
                 </PrivateRoute>
               }
-            /> */}
+            />
             {/* <Route
               path="/transaction/:transactionId"
               element={

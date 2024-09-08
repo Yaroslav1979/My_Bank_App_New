@@ -10,9 +10,10 @@ interface FormInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
+  icon?: string; 
 }
 
-const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChange, required = false }) => {
+const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChange, required = false, icon }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => {
@@ -23,8 +24,9 @@ const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChang
     <div className="form-container">
       <label className="form-container__subtitle">{label}</label>
       <div className="form-container__input-wrapper">
+        {icon && <span className="input-icon">{icon}</span>} {/* Додаємо іконку */}
         <input
-          className="form-container__field"
+          className={`form-container__field ${icon ? 'with-icon' : ''}`}
           type={showPassword ? 'text' : type}
           name={name}
           value={value}

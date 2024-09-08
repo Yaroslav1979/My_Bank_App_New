@@ -9,6 +9,7 @@ import Transaction from "../../component/transaction";
 import ReceiveButton from "../../svg/arrow-down-right.svg";
 import SendButton from "../../svg/people-upload.svg";
 import FormLink from "../../component/form-link";
+import { useNavigate } from 'react-router-dom';
 
 import "./index.css";
 
@@ -19,6 +20,7 @@ export default function Container(
     button?: boolean,
     id?: string,    
   } ): JSX.Element {
+    const navigate = useNavigate();
     return (
       <section className="start balance"> 
       <img src={BackgroundBalance} alt="background" className="bgd-small" />
@@ -41,7 +43,7 @@ export default function Container(
           <p>Receiv</p>
         </button>
 
-        <button className="button__transaction">
+        <button className="button__transaction" onClick={() => navigate("/send")}>
           <img src={SendButton} alt="Send" className="icon icon__transaction" />
           <p>Send</p>
         </button>
