@@ -38,9 +38,9 @@ export default function Container(
       </div>
 
       <div className="buttons__wrapper">
-        <button className="button__transaction">
+        <button className="button__transaction" onClick={() => navigate("/receive")}>
           <img src={ReceiveButton} alt="Receive" className="icon icon__transaction" />
-          <p>Receiv</p>
+          <p>Receive</p>
         </button>
 
         <button className="button__transaction" onClick={() => navigate("/send")}>
