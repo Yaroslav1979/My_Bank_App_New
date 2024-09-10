@@ -7,7 +7,7 @@ import RecoveryPage from "./container/recovery";
 import RecoveryConfirmPage from "./container/recovery-confirm";
 import BalancePage from "./container/balance";
 import Notifications from "./container/notifications";
-// import SettingsPage from "./container/settings-page";
+import Settings from "./container/settings";
 import ReceiveSum from "./container/receive";
 import SendSum from "./container/send";
 // import TransactionPage from "./container/transaction-page";
@@ -125,14 +125,14 @@ const App: React.FC = () => {
                 </PrivateRoute>
               }
             />
-            {/* <Route
+            <Route
               path="/settings"
               element={
                 <PrivateRoute>
-                  <SettingsPage />
+                  <Settings />
                 </PrivateRoute>
               }
-            /> */}
+            />
             <Route
               path="/receive"
               element={

@@ -3,7 +3,7 @@ import Title from "../../component/title";
 // import Button from '../../component/button';
 import Subtitle from "../../component/subtitle";
 import BackgroundBalance from "../../png/bg-small.png";
-import SetingsButton from "../../svg/seting.svg";
+import SettingsButton from "../../svg/setting.svg";
 import NotificationsButton from "../../svg/bell-white.svg";
 import Transaction from "../../component/transaction";
 import ReceiveButton from "../../svg/arrow-down-right.svg";
@@ -27,7 +27,9 @@ export default function Container(
       
       <div className="head head__balance">     
         <div className="subhead">
-        <img src={SetingsButton} alt="Setings" className="icon" />
+        
+        <FormLink linkHref="/settings" linkText={<img src={SettingsButton} alt="Settings" className="icon" />} />
+
         <Subtitle > <div className="subtitle__balance"> Main wallet</div> </Subtitle>
         
         <FormLink linkHref="/notifications" linkText={<img src={NotificationsButton} alt="Notifications" className="icon" />} />

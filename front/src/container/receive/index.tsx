@@ -35,7 +35,7 @@ const ReceiveSum: React.FC = () => {
   };
 
   return (
-    <div className='page--receive'>
+    <div className='page--settings'>
     <Page pageTitle="Receive">
       <div>
         <form className="form" onSubmit={handleSubmit}>
