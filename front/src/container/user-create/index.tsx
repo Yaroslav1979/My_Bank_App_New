@@ -24,9 +24,13 @@ const Container: React.FC<ContainerProps> = ({children}) => {
         <Title>Sign up</Title>
         <Subtitle>Choose a registration method</Subtitle>
       </div>
-      <RegisterForm onError={handleError}>
+      <RegisterForm 
+      mode="register" 
+      onError={handleError} 
+      >
         <FormLink text="Already have an account? " linkText="Sign In" linkHref='/user-enter' />
       </RegisterForm> 
+      
       {warningMessage && (
         <span className="warning">
           <img src={warning} alt="error" /> <span>{warningMessage}</span>

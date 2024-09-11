@@ -1,43 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/authContext';
 import FormInput from '../form-input';
 import Button from "../button";
 import "./index.css";
 
 interface RegisterFormProps {
   onError: (message: string) => void;
-  children?: React.ReactNode; // Додано пропс для children
+  onSuccess?: (email: string, password: string) => void;
+  children?: React.ReactNode;
+  mode: 'register' | 'login'; 
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
 
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:4000/user-create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      let response;
+      if (mode === 'login') {
+        response = await fetch('http://localhost:4000/user-enter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      if (!response.ok) {
-        const errorResult = await response.json();
-        throw new Error(errorResult.message || 'Registration failed');
+        if (!response.ok) {
+          const errorResult = await response.json();
+          throw new Error(errorResult.message || 'Login failed');
+        }
+
+        const result = await response.json();
+        console.log(result.message);
+
+        if (authContext && authContext.dispatch) {
+          authContext.dispatch({
+            type: 'LOGIN',
+            payload: {
+              token: result.token,
+              user: { email },
+            },
+          });          
+          navigate('/balance');
+
+        } else {
+          throw new Error("Authentication context is unavailable.");
+        }
+        
+      } else if (mode === 'register') {
+        response = await fetch('http://localhost:4000/user-create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const errorResult = await response.json();
+          throw new Error(errorResult.message || 'Registration failed');
+        }
+
+        const result = await response.json();
+        console.log(result.message);
+
+        // Перенаправляємо на сторінку верифікації
+        navigate('/verify-email', { state: { email } });
       }
-
-      const result = await response.json();
-      console.log(result.message);
-
-      // Направлення користувача на сторінку верифікації з передачею email
-      navigate('/verify-email', { state: { email } });
     } catch (error) {
       onError((error as Error).message);
     }
@@ -54,7 +93,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            // placeholder="Enter your email"
           />
         </div>
         <div className="form-container">
@@ -65,13 +103,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            // placeholder="Enter your password"
           />
         </div>
         <Button type="submit">Continue</Button>
         {error && <p className="error">{error}</p>}
       </form>
-      {children} {/* Додано підтримку children */}
+      {children}
     </div>
   );
 };

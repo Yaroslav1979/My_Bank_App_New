@@ -81,7 +81,6 @@ router.post('/user-create', function (req, res) {
   }
 });
 
-
 //--------------------------------------------------------
 router.post('/verify-email', function (req, res) {
   try {
@@ -94,7 +93,8 @@ router.post('/verify-email', function (req, res) {
 
       // Генерація токена після успішної верифікації
       const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
-      user.token = token; // Збереження токена в користувача
+     
+      TokenStore.saveToken(user.email, token);
 
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
@@ -113,6 +113,59 @@ router.post('/verify-email', function (req, res) {
   }
 });
 // ---------------------------------------------
+
+router.post('/user-enter', async function (req, res) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Потрібно ввести email та пароль, щоб увійти в аккаунт'
+      });
+    }
+
+    const user = await User.getByEmail(email); // Асинхронний виклик
+    if (!user) {
+      return res.status(400).json({
+        message: 'Користувача з таким email не знайдено'
+      });
+    }
+
+    if (!user.verifyPassword(password)) {
+      return res.status(401).json({
+        message: 'Невірний пароль'
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({
+        message: 'Користувач не верифікований'
+      });
+    }
+
+    // Перевірка наявності токена користувача у сховищі
+    const token = TokenStore.getToken(user.email);
+    if (!token) {
+      return res.status(500).json({
+        message: 'Токен не знайдено',
+      });
+    }
+
+    // Повертаємо токен, якщо користувач успішно увійшов
+    return res.status(200).json({
+      message: 'Ви успішно увійшли в аккаунт',
+      token: token // Повертаємо вже наявний токен
+    });
+
+  } catch (e) {
+    console.error('Помилка при вході в аккаунт:', e);
+    return res.status(500).json({
+      message: 'Не вдалося увійти в аккаунт'
+    });
+  }
+});
+
+
 
 // router.post('/user-enter', function (req, res) {
 //   try {
@@ -144,8 +197,8 @@ router.post('/verify-email', function (req, res) {
 //     }   
 
 //       // Створення токену на 30 днів
-//     const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
-//     TokenStore.saveToken(user.email, token); // Зберігання токену у базі даних
+//     // const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: '30d' });
+//     // TokenStore.saveToken(user.email, token); // Зберігання токену у базі даних
     
 //     console.log('Ви увійшли в аккаунт:', user);
 
@@ -181,49 +234,49 @@ router.post('/verify-email', function (req, res) {
 // });
 
 
-router.post('/user-enter', function (req, res) {
-  try {
-    const { email, password } = req.body;
+// router.post('/user-enter', function (req, res) {
+//   try {
+//     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Потрібно ввести email та пароль, щоб увійти в аккаунт',
-      });
-    }
+//     if (!email || !password) {
+//       return res.status(400).json({
+//         message: 'Потрібно ввести email та пароль, щоб увійти в аккаунт',
+//       });
+//     }
 
-    const user = User.getByEmail(email);
-    if (!user) {
-      return res.status(400).json({
-        message: 'Користувача з таким email не знайдено',
-      });
-    }
+//     const user = User.getByEmail(email);
+//     if (!user) {
+//       return res.status(400).json({
+//         message: 'Користувача з таким email не знайдено',
+//       });
+//     }
 
-    if (!user.verifyPassword(password)) {
-      return res.status(401).json({
-        message: 'Невірний пароль',
-      });
-    }
+//     if (!user.verifyPassword(password)) {
+//       return res.status(401).json({
+//         message: 'Невірний пароль',
+//       });
+//     }
 
-    if (!user.isVerified) {
-      return res.status(400).json({
-        message: 'Користувач не верифікований',
-      });
-    }
+//     if (!user.isVerified) {
+//       return res.status(400).json({
+//         message: 'Користувач не верифікований',
+//       });
+//     }
 
     
 
-    return res.status(200).json({
-      message: 'Ви успішно увійшли в аккаунт',
-      token: user.token,
-    });
+//     return res.status(200).json({
+//       message: 'Ви успішно увійшли в аккаунт',
+//       token: user.token,
+//     });
     
-  } catch (e) {
-    console.error('Помилка при вході в аккаунт:', e);
-    return res.status(500).json({
-      message: 'Не вдалося увійти в аккаунт',
-    });
-  }
-});
+//   } catch (e) {
+//     console.error('Помилка при вході в аккаунт:', e);
+//     return res.status(500).json({
+//       message: 'Не вдалося увійти в аккаунт',
+//     });
+//   }
+// });
 //--------------------------------------------
 
 // const nodemailer = require('nodemailer'); // For sending emails

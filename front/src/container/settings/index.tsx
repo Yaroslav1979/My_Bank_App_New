@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import FormInput from "../../component/form-input";
 import Page from "../../component/page";
 import Button from "../../component/button";
+import ButtonLogout from "../../component/button-logout"
 import { useNavigate } from 'react-router-dom';
 import './index.css';
 
-
-
-const ReceiveSum: React.FC = () => {
+const Settings: React.FC = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,9 +91,11 @@ const ReceiveSum: React.FC = () => {
           </Button>
           </div>
 
-          <Button type="submit" className='setting-btn setting-btn--red'>    
-             Log Out 
-          </Button>          
+          <ButtonLogout
+          //  className='setting-btn setting-btn--red' 
+           />    
+             {/* Log Out 
+          </ButtonLogout>           */}
           {error && <p className="error">{error}</p>}
         </form>
 
@@ -104,4 +105,4 @@ const ReceiveSum: React.FC = () => {
   );
 };
 
-export default ReceiveSum;
+export default Settings;
