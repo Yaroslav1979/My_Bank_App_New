@@ -53,21 +53,28 @@ export default function Container(
 
       <div className="balance__buttons">  
               
-      <div>
-      <Transaction
+      <div className="transaction-link">
+      <FormLink linkHref="/transaction" linkText={
+        <Transaction
         logo="../../svg/stripe.svg"
-        name="Stripe"
+        name={<p className="transaction-link__name"> Stripe</p>}
         time="12:25"
         type="Sending"
         amount={+125.00}
-      />
-      <Transaction
-        logo="../../svg/human.svg"
-        name="Oleg V."
-        time="12:25"
-        type="Receipt"
-        amount={-200.50}
-      />
+      />}
+       />
+
+      <FormLink linkHref="/transaction" linkText={
+         <Transaction
+         logo="../../svg/human.svg"
+         name={<p className="transaction-link__name"> Oleg V.</p>}
+         time="12:25"
+         type="Receipt"
+         amount={-200.50}
+       />}  
+       />
+    
+     
      
     </div>
         

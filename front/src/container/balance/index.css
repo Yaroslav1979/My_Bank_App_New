@@ -55,4 +55,7 @@
     cursor: pointer;
   }
   
-  
+  .transaction-link__name {
+    color: #1D1D1F;
+    
+  }

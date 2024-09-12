@@ -2,11 +2,14 @@
     margin-top: 12px;
     font-size: 14px;
     line-height: 100%;
+    
 }
 
 .form-link__text {
     color: #1D1D1F;
+   
 }
 .form-link__link {    
-    color: #775CE5;    
+    color: #775CE5;  
+    text-decoration: none;  
 }

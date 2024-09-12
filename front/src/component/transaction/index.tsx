@@ -3,7 +3,7 @@ import './index.css';
 
 interface TransactionProps {
   logo: string;
-  name: string;
+  name:  React.ReactNode;
   time: string;
   type: 'Receipt' | 'Sending';
   amount: number;

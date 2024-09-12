@@ -10,7 +10,7 @@ import Notifications from "./container/notifications";
 import Settings from "./container/settings";
 import ReceiveSum from "./container/receive";
 import SendSum from "./container/send";
-// import TransactionPage from "./container/transaction-page";
+import Transaction from "./container/transaction";
 // import Error from "./component/error-page";
 // import SignupConfirmPage from "./container/user-confirm";
 import { AuthProvider, AuthContext } from './context/authContext';
@@ -149,14 +149,15 @@ const App: React.FC = () => {
                 </PrivateRoute>
               }
             />
-            {/* <Route
-              path="/transaction/:transactionId"
+            <Route
+              path= "/transaction"
+              // "/transaction/:transactionId"
               element={
                 <PrivateRoute>
-                  <TransactionPage />
+                  <Transaction />
                 </PrivateRoute>
               }
-            /> */}
+            />
             {/* <Route path="*" element={<Error />} /> */}
            
           </Routes>
