@@ -13,10 +13,14 @@ const RecoveryPage: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const isFormValid = email.trim() !== '';
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+    console.log("Submitting form with email:", email); 
 
     try {
       const response = await fetch('http://localhost:4000/recovery', {
@@ -32,9 +36,11 @@ const RecoveryPage: React.FC = () => {
       }
 
       const result = await response.json();
+      console.log('Success:', result);
       setSuccess(result.message);
       navigate('/recovery-confirm', { state: { email } }); // Navigate with email
     } catch (error) {
+      console.error('Error:', error); 
       setError('Email not found. Please try again.');
     }
   };
@@ -57,7 +63,7 @@ const RecoveryPage: React.FC = () => {
             required
           />
         </div>
-        <Button>Send Code</Button>
+        <Button type="submit" disabled={!isFormValid}>Send Code</Button>
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
       </form>

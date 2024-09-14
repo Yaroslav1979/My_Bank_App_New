@@ -1,22 +1,24 @@
 // const bcrypt = require('bcryptjs'); - для хешування пароля
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const SECRET_KEY = 'your_secret_key';
 
 class User {
   static #list = [];
   static #count = Math.floor(Math.random() * 90000) + 10000;
 
-  constructor(email, password, verificationCode) {
+  constructor(email, password, verificationCode, passwordResetCode) {
     this.id = User.#count++;
     this.email = email;
-    this.password = password;    //this.password = bcrypt.hashSync(password, 8); // Для випадку хешування пароля
+    this.password = bcrypt.hashSync(password, 8); // Хешування пароля
     this.verificationCode = verificationCode;
+    this.passwordResetCode = passwordResetCode;
     this.isVerified = false;
     this.date = new Date().getTime();
     this.token = jwt.sign({ id: this.email }, SECRET_KEY, { expiresIn: 86400 }); // Створення токену
   }
-  verifyPassword = (password) => this.password === password;
-  // verifyPassword = (password) => bcrypt.compareSync(password, this.password); // Перевірка паролю при хешуванні
+
+  verifyPassword = (password) => bcrypt.compareSync(password, this.password); // Перевірка паролю
 
   static add = (user) => {
     this.#list.push(user);
@@ -55,12 +57,16 @@ class User {
     }
   };
 
-  static update = (user, { email }) => {
+  static update = (user, { email, password }) => {
     if (email) {
       user.email = email;
     }
+    if (password) {
+      user.password = bcrypt.hashSync(password, 8); // Хешування нового пароля
+    }
   };
 }
+
 module.exports = User;
 
 // class User {

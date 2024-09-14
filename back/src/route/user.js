@@ -2,7 +2,7 @@ require('dotenv').config();
 
 // Підключаємо роутер до бек-енду
 const express = require('express');
-
+const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const User = require('../class/user');
@@ -284,25 +284,23 @@ router.post('/user-enter', async function (req, res) {
 // Your user model and other necessary imports
 
 router.post('/recovery', async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body;  
 
-  try {
-    // Check if the email exists in the database
-    const user = await User.findOne({ email });
+  try {   
+    const user = User.getByEmail(email);
 
-    if (!user) {
+    if (!user) {     
       return res.status(404).json({ message: 'Email not found' });
     }
 
-    // Generate a verification code or token
-    const verificationCode = Math.floor(100000 + Math.random() * 900000); // Example code
+    const newResetCode = Math.floor(100000 + Math.random() * 900000); // Example code
 
     // Save the verification code in the user's record in the database
-    user.resetPasswordCode = verificationCode;
-    await user.save();
+    user.passwordResetCode = newResetCode;
+    // await user.save();
 
      // Виведення коду в консоль замість відправки на email
-     console.log(`Verification code for ${email}: ${verificationCode}`);
+     console.log(`Verification code for ${email}: ${newResetCode}`);
 
     // Send the verification code to the user's email
     // const transporter = nodemailer.createTransport({
@@ -324,33 +322,13 @@ router.post('/recovery', async (req, res) => {
 
     res.json({ message: 'Verification code sent to your email' });
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 //------------------------------------------------
 
-router.post('/verify-code', async (req, res) => {
-  const { email, verificationCode } = req.body;
-
-  try {
-     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (user.resetPasswordCode !== verificationCode) {
-      return res.status(400).json({ message: 'Invalid verification code' });
-    }
-
-    res.json({ message: 'Verification code is correct' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-//--------------------------------------------------
 
 // const bcrypt = require('bcrypt'); // Для хешування паролів
 
@@ -384,34 +362,119 @@ router.post('/verify-code', async (req, res) => {
 //   }
 // });
 
+// ----------------------------------------------
+
+// router.post('/verify-code', async (req, res) => {
+//   const { email, verificationCode } = req.body;
+
+//   try {
+//     const user = User.getByEmail(email);
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     if (user.passwordResetCode !== parseInt(verificationCode, 10)) {
+//       return res.status(400).json({ message: 'Invalid verification code' });
+//     }
+
+//     res.json({ message: 'Verification code is correct' });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+//--------------------------------------------------
+
 router.post('/recovery-confirm', async (req, res) => {
   const { email, verificationCode, newPassword } = req.body;
-
+ 
   try {
-    // Знаходимо користувача за електронною адресою
-    const user = await User.findOne({ email });
+    const user = User.getByEmail(email);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Перевіряємо, чи код верифікації співпадає
-    if (user.resetPasswordCode !== verificationCode) {
+    if (user.passwordResetCode !== parseInt(verificationCode, 10)) {
       return res.status(400).json({ message: 'Invalid verification code' });
     }
+    
+    user.password = newPassword; // Можна додати хешування паролю
+    user.passwordResetCode = null; // Обнуляємо код після успішної зміни паролю
 
-    // Тимчасово зберігаємо пароль без хешування
-    user.password = newPassword;
-    user.resetPasswordCode = undefined; // Видаляємо код верифікації після успішної зміни пароля
-    await user.save();
+    // Генерація JWT токена для авторизації
+    const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
 
-    res.json({ message: 'Password has been reset successfully' });
+    res.json({ message: 'Password reset successful', token });
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// -------------------------------------------------
+
+router.put('/settings-email', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Заповніть поля Email та OldPassword' });
+  }
+
+  try {
+    const user = User.getByEmail(req.user.email); // Отримати користувача з токена або іншого джерела
+
+    if (!user) {
+      return res.status(404).json({ error: 'Користувача не знайдено' });
+    }
+
+    // Перевірка діючого паролю
+    if (!user.verifyPassword(password)) {
+      return res.status(400).json({ error: 'Неправильний пароль' });
+    }
+
+    // Оновлення email
+    User.updateById(user.id, { email });
+    
+    res.status(200).json({ message: 'Email успішно змінено' });
+  } catch (err) {
+    res.status(500).json({ error: 'На жаль щось пішло не так (((' });
+  }
+});
+
 //-------------------------------------------------
+router.put('/settings-password', async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ error: "Всі поля є обов'язковими" });
+  }
+
+  try {
+    const user = User.getById(req.user.id); // Отримати користувача за ID з токена або іншого джерела
+
+    // Перевірка діючого паролю
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Неправильний старий пароль' });
+    }
+
+    // Оновлення паролю
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    
+    // Зберегти оновленого користувача
+    User.update(user); // Або використовуйте метод для збереження в базі даних, якщо це необхідно
+
+    res.status(200).json({ message: 'Пароль успішно змінено' });
+  } catch (err) {
+    console.error(err); // Логування помилки для діагностики
+    res.status(500).json({ error: 'Ой... Щось пішло не так' });
+  }
+});
+
+// -------------------------------------------------
 
 // Експортуємо глобальний роутер
 module.exports = router

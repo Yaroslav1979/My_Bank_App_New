@@ -19,7 +19,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 
-  
+  // Перевірка, чи заповнені всі поля
+  const isFormValid = email.trim() !== '' && password.trim() !== '';
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -50,13 +52,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
               token: result.token,
               user: { email },
             },
-          });          
+          });
           navigate('/balance');
 
         } else {
           throw new Error("Authentication context is unavailable.");
         }
-        
+
       } else if (mode === 'register') {
         response = await fetch('http://localhost:4000/user-create', {
           method: 'POST',
@@ -105,7 +107,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
             required
           />
         </div>
-        <Button type="submit">Continue</Button>
+        <Button type="submit" className="form__button" disabled={!isFormValid}>Continue</Button>
         {error && <p className="error">{error}</p>}
       </form>
       {children}

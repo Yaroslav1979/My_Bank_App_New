@@ -10,6 +10,7 @@
     "@babel/core": "^7.21.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.5",
+    "bcryptjs": "^2.4.3",
     "concurrently": "^8.2.0",
     "connect-livereload": "^0.6.1",
     "cookie-parser": "~1.4.4",

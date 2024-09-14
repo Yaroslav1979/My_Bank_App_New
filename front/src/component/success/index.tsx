@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import "./index.css";
 import Modal from '../modal';
 
-const Success: React.FC = () => {
+interface SuccessProps {
+  message?: string;
+}
+
+const Success: React.FC<SuccessProps> = ({ message }) => {
   const [showModal, setShowModal] = useState(true);
 
   const closeModal = () => {
@@ -11,9 +15,9 @@ const Success: React.FC = () => {
 
   return (
     <div>
-      {showModal && 
+      {showModal && message && 
         <Modal 
-          message="Реєстрація пройшла успішно!" 
+          message={message} 
           onClose={closeModal} 
           type="success" 
         />

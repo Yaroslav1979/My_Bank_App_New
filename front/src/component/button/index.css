@@ -5,9 +5,16 @@
     border-radius: 12px;
     color: #fff;
     font-weight: 500;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .form__button:hover {
     transition: opacity 0.5s;
     opacity: 0.7;
 }
+
+.form__button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none; /* Забороняє будь-які дії на кнопці */
+  }

@@ -19,6 +19,8 @@ const VerifyEmail: React.FC = () => {
 
   const email = location.state?.email || '';
 
+  const isFormValid = verificationCode.trim() !== '';
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -83,7 +85,7 @@ const VerifyEmail: React.FC = () => {
             required
           />
         </div>
-        <Button type="submit">Confirm</Button>
+        <Button type="submit" disabled={!isFormValid}>Confirm</Button>
         {error && <p className="error">{error}</p>}
       </form>
       {showModal && (
