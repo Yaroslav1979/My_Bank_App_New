@@ -16,15 +16,30 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 
   // Перевірка, чи заповнені всі поля
-  const isFormValid = email.trim() !== '' && password.trim() !== '';
+  const isFormValid = email.trim() !== '' && password.trim() !== '' && !passwordError;
+
+  // Функція перевірки пароля
+  const validatePassword = (password: string) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setPasswordError("Пароль надто простий. Пароль має бути не менше 8 символів, і містити цифри, великі та малі літери.");
+    } else {
+      setPasswordError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    // Перевіряємо пароль перед відправкою форми
+    validatePassword(password);
+    if (passwordError) return;
 
     try {
       let response;
@@ -97,15 +112,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
             required
           />
         </div>
-        <div className="form-container">
+        <div className={`form-container ${passwordError ? 'error-border' : ''}`}>
           <FormInput
             label="Password"
             type="password"
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onBlur={() => validatePassword(password)} // Перевірка при втраті фокуса
             required
           />
+          {passwordError && <p className="error">{passwordError}</p>}
         </div>
         <Button type="submit" className="form__button" disabled={!isFormValid}>Continue</Button>
         {error && <p className="error">{error}</p>}

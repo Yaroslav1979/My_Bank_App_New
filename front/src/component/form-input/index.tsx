@@ -9,12 +9,13 @@ interface FormInputProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   icon?: string;
-  disabled?: boolean; 
+  // disabled?: boolean; 
 }
 
-const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChange, required = false, icon }) => {
+const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChange,  onBlur, required = false, icon }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => {
@@ -32,7 +33,9 @@ const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChang
           name={name}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           required={required}
+          
         />
         {type === 'password' && (
           <button

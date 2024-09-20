@@ -23,3 +23,19 @@
     width: 24px;
     height: 24px;
   }
+  .error {
+    color: red;
+    font-size: 0.875rem;
+  }
+  
+  .error-border input {
+    border-color: red;
+  }
+  
+  .email-error {
+    color: #F2883D;
+  }
+
+  /* .form-container input {
+    border-color: #ccc; /* стандартний колір бордера */
+  /* } */ 

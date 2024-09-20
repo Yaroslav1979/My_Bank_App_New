@@ -150,8 +150,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path= "/transaction"
-              // "/transaction/:transactionId"
+              path="/transaction/:transactionId"
               element={
                 <PrivateRoute>
                   <Transaction />
