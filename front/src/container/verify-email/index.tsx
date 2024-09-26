@@ -45,6 +45,9 @@ const VerifyEmail: React.FC = () => {
       if (authContext && authContext.dispatch) {
         console.log('Dispatching token:', result.token);
 
+        localStorage.setItem('token', result.token);
+       localStorage.setItem('user', JSON.stringify({ email }));
+
         authContext.dispatch({
           type: 'LOGIN',
           payload: {

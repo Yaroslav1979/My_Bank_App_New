@@ -24,7 +24,7 @@ const AuthRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   const authContext = useContext(AuthContext);
   console.log('Auth state:', authContext);
 
-  if (authContext && authContext.state.token) {
+  if (authContext && authContext.state.isAuthenticated) {
     return <Navigate to="/balance" />;
   }
 
@@ -36,7 +36,7 @@ const PrivateRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   console.log('Auth state in PrivateRoute:', authContext?.state);
 
 
-  if (!authContext || !authContext.state.token) {
+  if (!authContext || !authContext.state.isAuthenticated) {
     console.log('Token not found, redirecting to /user-enter');
     return <Navigate to="/user-enter" />;   
   }

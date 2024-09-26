@@ -43,6 +43,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
 
     try {
       let response;
+
       if (mode === 'login') {
         response = await fetch('http://localhost:4000/user-enter', {
           method: 'POST',
@@ -68,6 +69,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
               user: { email },
             },
           });
+
+          localStorage.setItem('token', result.token);
+          localStorage.setItem('user', JSON.stringify({ email }));
+
           navigate('/balance');
 
         } else {

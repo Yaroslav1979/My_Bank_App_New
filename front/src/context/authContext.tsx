@@ -1,18 +1,20 @@
 import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
 
 export interface AuthState {
-  token: string | null;
+  token: string | null; // Токен буде null спочатку
   user: any | null;
+  isAuthenticated: boolean; // Додайте це поле
 }
 
 export interface AuthAction {
-  type: 'LOGIN' | 'LOGOUT';
+  type: 'LOGIN' | 'LOGOUT' | 'SET_USER';
   payload?: any;
 }
 
 const initialAuthState: AuthState = {
-  token: localStorage.getItem("authToken"),
+  token: null, 
   user: null,
+  isAuthenticated: false, 
 };
 
 export const AuthContext = createContext<{
@@ -27,12 +29,22 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         token: action.payload.token,
         user: action.payload.user,
+        isAuthenticated: true, 
       };
     case 'LOGOUT':
+      localStorage.removeItem('token');
+  localStorage.removeItem('user');
       return {
         ...state,
         token: null,
         user: null,
+        isAuthenticated: false, 
+      };
+    case 'SET_USER':
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: action.payload ? true : false,
       };
     default:
       return state;
@@ -43,13 +55,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
-    console.log('Token in state:', state.token);
-    if (state.token) {
-      localStorage.setItem("authToken", state.token);
-    } else {
-      localStorage.removeItem("authToken");
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    const storedToken = localStorage.getItem('token');
+    if (storedUser && storedToken) {
+      dispatch({ type: 'LOGIN', payload: { token: storedToken, user: storedUser } });
+    } else if (storedUser) {
+      dispatch({ type: 'SET_USER', payload: storedUser });
     }
-  }, [state.token]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ state, dispatch }}>
