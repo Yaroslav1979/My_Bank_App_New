@@ -36,9 +36,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-
-    // Перевіряємо пароль перед відправкою форми
+    
     validatePassword(password);
+
     if (passwordError) return;
 
     try {
