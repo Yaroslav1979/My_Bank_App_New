@@ -5,8 +5,8 @@ import "./index.css";
 
 
 interface ComponentProps {
-  pageTitle?: string; // Позначаємо, що pageTitle необов'язковий
-  children: React.ReactNode; // Діти обов'язкові
+  pageTitle?: string; 
+  children: React.ReactNode; 
 }
 
 export default function Component({ pageTitle, children }: ComponentProps) {

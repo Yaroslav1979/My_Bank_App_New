@@ -43,7 +43,7 @@ const RecoveryConfirmPage: React.FC = () => {
       setSuccess(result.message);
 
       if (authContext && authContext.dispatch) {
-        // Логін користувача після успішного скидання пароля
+      
         authContext.dispatch({
           type: 'LOGIN',
           payload: {
@@ -52,14 +52,14 @@ const RecoveryConfirmPage: React.FC = () => {
           },
         });
 
-        // Перенаправлення на сторінку /balance
+        
         navigate('/balance');
       }
     } catch (error) {
       setError('Password reset failed. Please try again.');
-      setVerificationCode(''); // Очищення поля з кодом
-      setNewPassword(''); // Очищення поля з паролем
-      document.getElementById('verificationCode')?.focus(); // Фокус на полі з кодом
+      setVerificationCode(''); 
+      setNewPassword(''); 
+      document.getElementById('verificationCode')?.focus(); 
     }
   };
 

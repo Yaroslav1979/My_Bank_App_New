@@ -68,7 +68,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
               token: result.token,
               user: { email },
             },
-          });
+          });     
 
           localStorage.setItem('token', result.token);
           localStorage.setItem('user', JSON.stringify({ email }));
@@ -96,8 +96,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
         const result = await response.json();
         console.log(result.message);
 
-        // Перенаправляємо на сторінку верифікації
-        navigate('/verify-email', { state: { email } });
+      navigate('/verify-email', { state: { email } });
       }
     } catch (error) {
       onError((error as Error).message);
@@ -124,7 +123,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onBlur={() => validatePassword(password)} // Перевірка при втраті фокуса
+            onBlur={() => validatePassword(password)} 
             required
           />
           {passwordError && <p className="error">{passwordError}</p>}

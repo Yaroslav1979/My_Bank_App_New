@@ -10,7 +10,7 @@ import './index.css';
 const Settings: React.FC = () => {
   const authContext = useContext(AuthContext);
 
-  const [email, setEmail] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -21,42 +21,40 @@ const Settings: React.FC = () => {
     return <p>Помилка: неможливо отримати дані користувача</p>; 
   }
 
-  const { state } = authContext;  // Отримуємо токен з контексту
+  const { state } = authContext;  
 
   const handleEmailChange = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
 
-    if (!email) {
-      setError("Введіть новий email");
-      return;
-    }
-
-    if (!password) {
-      setError("Введіть свій пароль");
+    if (!/\S+@\S+\.\S+/.test(newEmail)) {
+      setError("Введіть дійсну електронну адресу");
       return;
     }
 
     if (!state.token) {
-      setError("Відсутній токен авторизації");
+      setError("Токен не надано");
       return;
     }
-    
-    try {
+
+     try {
       const response = await fetch('http://localhost:4000/settings-email', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`,  // Додаємо токен в заголовок
+          'Authorization': `Bearer ${state.token}`,  
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ newEmail, password }),
       });
-
+        
+      console.log("Authorization Token:", state.token);
+       
       const data = await response.json();
 
       if (response.ok) {
         setSuccessMessage("Email успішно змінено!");
+        authContext.dispatch({ type: 'CHANGE_EMAIL', payload: { user: data.user, token: data.token } });
       } else {
         setError(data.error || "Не вдалося змінити email");
       }
@@ -85,7 +83,7 @@ const Settings: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${state.token}`,  // Додаємо токен в заголовок
+          'Authorization': `Bearer ${state.token}`, 
         },
         body: JSON.stringify({ oldPassword, newPassword }),
       });
@@ -94,6 +92,7 @@ const Settings: React.FC = () => {
 
       if (response.ok) {
         setSuccessMessage("Пароль успішно змінено!");
+        authContext.dispatch({ type: 'CHANGE_PASSWORD' });
       } else {
         setError(data.error || "Не вдалося змінити пароль");
       }
@@ -109,11 +108,11 @@ const Settings: React.FC = () => {
           <p className='recieve-subtitle'>Змінити email</p>
           <div className="form-container">
             <FormInput
-              label="Email"
+              label="Новий email"
               type="email"
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
               required
             />
             <FormInput

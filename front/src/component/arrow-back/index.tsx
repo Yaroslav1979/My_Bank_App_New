@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import './index.css';
 
 interface ArrowBackProps {
-  children?: React.ReactNode; // Робимо пропс children необов'язковим
+  children?: React.ReactNode; 
 }
 
 const ArrowBack = ({ children }: ArrowBackProps) => {
