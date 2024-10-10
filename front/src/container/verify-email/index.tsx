@@ -55,8 +55,7 @@ const VerifyEmail: React.FC = () => {
             user: { email },
           },
         });
-
-        // Перенаправлення на сторінку балансу після успішної верифікації
+        
         navigate('/balance');
       } else {
         throw new Error("Authentication context is unavailable.");
