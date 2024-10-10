@@ -1,4 +1,4 @@
-const tokens = {}; // Простий об'єкт для збереження токенів, замініть на реальну базу даних
+const tokens = {}; // Простий об'єкт для збереження токенів
 
 class TokenStore {
   static saveToken(email, token) {
@@ -11,6 +11,10 @@ class TokenStore {
 
   static deleteToken(email) {
     delete tokens[email];
+  }
+
+  static isValidToken(email, token) {
+    return tokens[email] === token;
   }
 }
 

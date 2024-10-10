@@ -91,17 +91,17 @@ router.post('/verify-email', function (req, res) {
       user.isVerified = true;
 
       // Отримуємо вже існуючий токен
-      // const token = TokenStore.getToken(user.email);
+      const token = TokenStore.getToken(user.email);
+      console.log("Token:", token);
+//       const oldToken = TokenStore.getToken(user.email);
+//       if (oldToken) {
+//         console.log("Deleting old token:", oldToken);
+//         TokenStore.deleteToken(user.email); // Видалення старого токена
+//       }
 
-      const oldToken = TokenStore.getToken(user.email);
-      if (oldToken) {
-        console.log("Deleting old token:", oldToken);
-        TokenStore.deleteToken(user.email); // Видалення старого токена
-      }
-
-      const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: 86400 });
-TokenStore.saveToken(user.email, token); 
-console.log("Saved token:", TokenStore.getToken(user.email));
+//       const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: 86400 });
+// TokenStore.saveToken(user.email, token); 
+// console.log("Saved token:", TokenStore.getToken(user.email));
 
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
@@ -248,7 +248,7 @@ router.post('/recovery-confirm', async (req, res) => {
     // Генерація JWT токена для авторизації
     const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
     TokenStore.saveToken(email, token);
-    res.json({ message: 'Password reset successful', token });
+    res.json({ message: 'Пароль успішно відновлено', token });
   } catch (error) {
     console.error('Server error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -258,7 +258,7 @@ router.post('/recovery-confirm', async (req, res) => {
 // -------------------------------------------------
 
 router.put('/settings-email', async (req, res) => {
-  const { newEmail, password } = req.body;
+  const { currentEmail, newEmail, password } = req.body;
   const token = req.headers['authorization'];
 
   if (!newEmail || !password) {
@@ -271,22 +271,15 @@ router.put('/settings-email', async (req, res) => {
 
   try {
     const tokenValue = token.split(' ')[1]; 
-    console.log("Received token:", tokenValue);
-
     const decoded = jwt.verify(tokenValue, SECRET_KEY);
-    console.log("Decoded token:", decoded);
 
-    // const storedToken = TokenStore.getToken(email); // Отримуємо токен зі сховища за email
-    // console.log("Stored token for email:", storedToken);
+    // Перевірка дійсності токена
+    if (!TokenStore.isValidToken(currentEmail, tokenValue)) {
+      return res.status(401).json({ error: 'Недійсний токен для цього email' });
+    }
 
-    // if (storedToken !== tokenValue) {
-    //   console.log("Token mismatch");
-    //   return res.status(401).json({ error: 'Недійсний токен' });
-    // }
-
-    // Шукаємо користувача по email з токена
-    const user = User.getById(decoded.email); // Шукаємо користувача по email
-
+    // Шукаємо користувача по email
+    const user = User.getByEmail(currentEmail); 
     if (!user) {
       return res.status(404).json({ error: 'Користувача не знайдено' });
     }
@@ -296,14 +289,15 @@ router.put('/settings-email', async (req, res) => {
     }
 
     // Оновлюємо email користувача
-    User.updateById(user.id, { newEmail });
+    user.email = newEmail; // оновлення email
     console.log(`Email updated for user ID: ${user.id}`);
 
     // Створюємо новий токен після зміни email
     const newToken = jwt.sign({ id: user.id, email: newEmail }, SECRET_KEY, { expiresIn: '1h' });
 
     // Оновлюємо токен у сховищі
-    TokenStore.saveToken(newEmail, newToken);
+    TokenStore.deleteToken(currentEmail); // видаляємо старий токен
+    TokenStore.saveToken(newEmail, newToken); // зберігаємо новий токен
 
     // Відправляємо новий токен на клієнт
     res.status(200).json({
@@ -318,11 +312,12 @@ router.put('/settings-email', async (req, res) => {
 });
 
 //-------------------------------------------------
+
 router.put('/settings-password', async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const { oldPassword, newPassword } = req.body; 
   const token = req.headers['authorization'];
 
-  if (!oldPassword || !newPassword) {
+  if (!oldPassword || !newPassword) { 
     return res.status(400).json({ error: "Всі поля є обов'язковими" });
   }
 
@@ -332,21 +327,35 @@ router.put('/settings-password', async (req, res) => {
 
   try {
     const tokenValue = token.split(' ')[1];
+    console.log("Token Value:", tokenValue);
+    
     const decoded = jwt.verify(tokenValue, SECRET_KEY);
-    const user = User.getByEmail(decoded.id); // Отримуємо користувача за email
+    console.log("Decoded:", decoded);
 
+    const user = User.getByEmail(decoded.id);
     if (!user) {
       return res.status(404).json({ error: 'Користувача не знайдено' });
     }
+
+    console.log("Found user:", user);
 
     if (!user.verifyPassword(oldPassword)) {
       return res.status(400).json({ error: 'Неправильний старий пароль' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    User.update(user, { password: hashedPassword });
+    user.password = hashedPassword
+    // User.update(user, { password: hashedPassword });
 
-    res.status(200).json({ message: 'Пароль успішно змінено' });
+    const newToken = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    TokenStore.deleteToken(user.email);
+    TokenStore.saveToken(user.email, newToken);
+
+    res.status(200).json({
+      message: 'Пароль успішно змінено',
+      token: newToken,
+      // user: { ...user, password: undefined } 
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Ой, щось пішло не так' });

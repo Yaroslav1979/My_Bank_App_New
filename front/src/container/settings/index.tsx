@@ -29,7 +29,7 @@ const Settings: React.FC = () => {
     setSuccessMessage(null);
 
     if (!/\S+@\S+\.\S+/.test(newEmail)) {
-      setError("Введіть дійсну електронну адресу");
+      setError("Введіть вірно електронну адресу");
       return;
     }
 
@@ -39,13 +39,15 @@ const Settings: React.FC = () => {
     }
 
      try {
+      const currentEmail = state.user.email;
+
       const response = await fetch('http://localhost:4000/settings-email', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${state.token}`,  
         },
-        body: JSON.stringify({ newEmail, password }),
+        body: JSON.stringify({ currentEmail, newEmail, password }),
       });
         
       console.log("Authorization Token:", state.token);
@@ -79,7 +81,7 @@ const Settings: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/settings-password', {
+           const response = await fetch('http://localhost:4000/settings-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +94,7 @@ const Settings: React.FC = () => {
 
       if (response.ok) {
         setSuccessMessage("Пароль успішно змінено!");
-        authContext.dispatch({ type: 'CHANGE_PASSWORD' });
+        authContext.dispatch({ type: 'CHANGE_PASSWORD', payload: { user: data.user, token: data.token } });
       } else {
         setError(data.error || "Не вдалося змінити пароль");
       }
