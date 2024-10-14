@@ -246,7 +246,7 @@ router.post('/recovery-confirm', async (req, res) => {
     user.passwordResetCode = null; 
 
     // Генерація JWT токена для авторизації
-    const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: 86400 });
     TokenStore.saveToken(email, token);
     res.json({ message: 'Пароль успішно відновлено', token });
   } catch (error) {
@@ -293,7 +293,7 @@ router.put('/settings-email', async (req, res) => {
     console.log(`Email updated for user ID: ${user.id}`);
 
     // Створюємо новий токен після зміни email
-    const newToken = jwt.sign({ id: user.id, email: newEmail }, SECRET_KEY, { expiresIn: '1h' });
+    const newToken = jwt.sign({ id: user.id, email: newEmail }, SECRET_KEY, { expiresIn: 86400 });
 
     // Оновлюємо токен у сховищі
     TokenStore.deleteToken(currentEmail); // видаляємо старий токен
@@ -332,7 +332,7 @@ router.put('/settings-password', async (req, res) => {
     const decoded = jwt.verify(tokenValue, SECRET_KEY);
     console.log("Decoded:", decoded);
 
-    const user = User.getByEmail(decoded.id);
+    const user = User.getById(decoded.id);
     if (!user) {
       return res.status(404).json({ error: 'Користувача не знайдено' });
     }
@@ -347,14 +347,14 @@ router.put('/settings-password', async (req, res) => {
     user.password = hashedPassword
     // User.update(user, { password: hashedPassword });
 
-    const newToken = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    const newToken = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: 86400 });
     TokenStore.deleteToken(user.email);
     TokenStore.saveToken(user.email, newToken);
 
     res.status(200).json({
       message: 'Пароль успішно змінено',
       token: newToken,
-      // user: { ...user, password: undefined } 
+      user: { ...user, password: undefined } 
     });
   } catch (err) {
     console.error(err.message);

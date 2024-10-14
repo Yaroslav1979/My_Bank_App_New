@@ -16,7 +16,7 @@ class User {
     this.passwordResetCode = passwordResetCode;
     this.isVerified = false;
     this.date = new Date().getTime();
-    this.token = jwt.sign({ id: this.email }, SECRET_KEY, { expiresIn: 86400 }); // Створення токену
+    this.token = jwt.sign({ id: this.id, email: this.email }, SECRET_KEY, { expiresIn: 86400 }); // Створення токену
     TokenStore.saveToken(this.email, this.token);
   }
 
