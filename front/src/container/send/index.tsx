@@ -9,11 +9,13 @@ const SendSum: React.FC = () => {
   const [email, setEmail] = useState('');
   const [sum, setSum] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     // Проста валідація
     if (!email || !sum) {
@@ -26,7 +28,34 @@ const SendSum: React.FC = () => {
       return;
     }
 
-    navigate("/confirmation");
+    try {
+      // Виконуємо POST-запит на сервер для транзакції
+      const response = await fetch('http://localhost:4000/balance-transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          amount: Number(sum),
+          type: 'debit',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Щось пішло не так');
+      }
+
+      // Показуємо повідомлення про успіх
+      setSuccess('Транзакцію успішно виконано!');
+      
+      // Перенаправляємо користувача на сторінку балансу
+      navigate('/balance');
+    } catch (err: any) {
+      // Виводимо повідомлення про помилку, якщо недостатньо коштів або інша помилка
+      setError(err.message);
+    }
   };
 
   return (
@@ -56,6 +85,7 @@ const SendSum: React.FC = () => {
           </div>
           <Button type="submit">Send</Button>
           {error && <p className="error">{error}</p>}
+          {success && <p className="success">{success}</p>}
         </form>
       </div>
     </Page>

@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const User = require('../class/user');
 const TokenStore = require('../class/token-store'); // шлях до файлу зберігання токенів
-
+const balanceStore = require('../class/balance-store'); // шлях до файлу зберігання балансу
 const router = express.Router();
 
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -362,6 +362,32 @@ router.put('/settings-password', async (req, res) => {
   }
 });
 // -------------------------------------------------
+
+// Ендпоїнт для отримання поточного балансу і історії транзакцій
+router.get('/balance', (req, res) => {
+  try {
+    res.json({
+      balance: balanceStore.getBalance(),
+      transactions: balanceStore.getTransactions(),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//---------------------------------------------------------
+
+// Ендпоїнт для перевірки і виконання транзакції
+router.post('/balance-transaction', (req, res) => {
+  const { amount, type } = req.body;
+
+  try {
+    const transaction = balanceStore.addTransaction(amount, type);
+    res.json({ success: true, transaction });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
 
 // Експортуємо глобальний роутер
 module.exports = router
