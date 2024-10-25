@@ -38,6 +38,7 @@ const SendSum: React.FC = () => {
         body: JSON.stringify({ 
           amount: Number(sum),
           type: 'debit',
+          recipient: email, 
         }),
       });
 

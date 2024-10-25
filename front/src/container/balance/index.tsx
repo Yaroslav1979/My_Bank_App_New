@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Title from "../../component/title";
@@ -10,6 +9,7 @@ import Transaction from "../../component/transaction";
 import ReceiveButton from "../../svg/arrow-down-right.svg";
 import SendButton from "../../svg/people-upload.svg";
 import FormLink from "../../component/form-link";
+import Button from "../../component/button"; 
 import "./index.css";
 
 const BalancePage: React.FC = () => {
@@ -24,24 +24,33 @@ const BalancePage: React.FC = () => {
         const response = await fetch('http://localhost:4000/balance', {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
+            'Content-Type': 'application/json',            
+          },          
+        }
+      );
+        
         if (!response.ok) {
           throw new Error('Не вдалося завантажити дані про баланс');
         }
 
         const data = await response.json();
+        console.log("Дані балансу:", data);
         setBalance(data.balance);
         setTransactions(data.transactions);
+       
       } catch (err: any) {
         setError(err.message);
       }
     };
 
     fetchBalanceData();
+    
   }, []);
+
+  // Функція для обробки кліка на транзакцію
+  const handleTransactionClick = (transactionId: string) => {
+    navigate(`/transaction/${transactionId}`); // Перенаправлення на сторінку транзакції
+  };
 
   return (
     <section className="start balance"> 
@@ -74,17 +83,22 @@ const BalancePage: React.FC = () => {
       </div>
 
       <div className="transaction-history">
-         {transactions.length > 0 ? (
-          transactions.map((transaction) => (
-            <Transaction
-              key={transaction.id}
-              logo={transaction.logo}
-              name={transaction.name || transaction.system} // Ім'я чи система оплати
-              time={transaction.date}
-              type={transaction.type === 'debit' ? 'Sending' : 'Receipt'}
-              amount={transaction.amount} // Передаємо просто число
-              amountClass={transaction.type === 'credit' ? 'amount-credit' : 'amount-debit'} // Зелений або червоний стиль
-/>
+  {transactions.length > 0 ? (
+    transactions.map((transaction) => (
+      <Button
+        key={transaction.id}
+        onClick={() => handleTransactionClick(transaction.id)}
+        className="transaction-item" // Вкажіть необхідний клас для стилів
+      >
+        <Transaction
+          logo={transaction.logo}
+          name={transaction.name || transaction.system}
+          time={transaction.date}
+          type={transaction.type === 'debit' ? 'Sending' : 'Receipt'}
+          amount={transaction.amount}
+          amountClass={transaction.type === 'credit' ? 'amount-credit' : 'amount-debit'}
+        />
+      </Button>
           ))
         ) : (
           <p>Транзакцій ще немає</p>
@@ -97,6 +111,7 @@ const BalancePage: React.FC = () => {
 };
 
 export default BalancePage;
+
 
 
 //---------------------------------------------------------------

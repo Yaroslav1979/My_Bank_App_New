@@ -389,5 +389,45 @@ router.post('/balance-transaction', (req, res) => {
   }
 });
 
+//------------------------------------------------------------
+
+
+// Ендпоінт для отримання транзакції за ID
+router.get('/transaction/:transactionId', (req, res) => {
+  const { transactionId } = req.params;
+  const transaction = balanceStore.getTransactionById(transactionId); // Використовуємо метод класу
+  if (transaction) {
+    return res.status(200).json(transaction);
+  } else {
+    return res.status(404).json({ success: false, error: 'Transaction not found' });
+  }
+});
+
+
+// Ендпоінт для додавання нової транзакції
+router.post('/balance-transaction', (req, res) => {
+  const { amount, address, system, type } = req.body;
+
+  // Перевіряємо, чи вказана сума
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
+  }
+
+  try {
+    // Використовуємо метод класу BalanceStore для додавання транзакції
+    const newTransaction = balanceStore.addTransaction(amount, type, address, system);
+    return res.status(201).json({ success: true, transaction: newTransaction });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Ендпоїнт для отримання всіх транзакцій
+router.get('/transactions', (req, res) => {
+  const transactions = balanceStore.getTransactions();
+  res.status(200).json({ success: true, transactions });
+});
+
+
 // Експортуємо глобальний роутер
 module.exports = router

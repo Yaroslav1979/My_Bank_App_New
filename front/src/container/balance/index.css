@@ -59,3 +59,10 @@
     color: #1D1D1F;
     
   }
+
+  .transaction-item {
+    all: unset; /* Знімає стандартні стилі кнопки */
+    cursor: pointer;
+    display: block;
+    width: 100%; /* Розтягує кнопку на всю ширину */
+  }
