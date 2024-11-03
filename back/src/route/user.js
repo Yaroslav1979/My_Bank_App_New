@@ -9,6 +9,7 @@ const User = require('../class/user');
 const TokenStore = require('../class/token-store'); // шлях до файлу зберігання токенів
 const balanceStore = require('../class/balance-store'); // шлях до файлу зберігання балансу
 const router = express.Router();
+const notificationStore = require('../class/notification-store');
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -375,22 +376,28 @@ router.get('/balance', (req, res) => {
   }
 });
 
-//---------------------------------------------------------
-
-// Ендпоїнт для перевірки і виконання транзакції
-router.post('/balance-transaction', (req, res) => {
-  const { amount, type } = req.body;
-
-  try {
-    const transaction = balanceStore.addTransaction(amount, type);
-    res.json({ success: true, transaction });
-  } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
-  }
-});
 
 //------------------------------------------------------------
 
+// Ендпоінт для додавання нової транзакції
+router.post('/balance-transaction', (req, res) => {
+  const {amount, type, address, system } = req.body;
+
+  // Перевіряємо, чи вказана сума
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
+  }
+
+  try {
+    // Використовуємо метод класу BalanceStore для додавання транзакції
+    const newTransaction = balanceStore.addTransaction (amount, type, address, system);
+    return res.status(201).json({ success: true, transaction: newTransaction });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+//---------------------------------------------------------------
 
 // Ендпоінт для отримання транзакції за ID
 router.get('/transaction/:transactionId', (req, res) => {
@@ -404,28 +411,56 @@ router.get('/transaction/:transactionId', (req, res) => {
 });
 
 
-// Ендпоінт для додавання нової транзакції
-router.post('/balance-transaction', (req, res) => {
-  const { amount, address, system, type } = req.body;
-
-  // Перевіряємо, чи вказана сума
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
-  }
-
-  try {
-    // Використовуємо метод класу BalanceStore для додавання транзакції
-    const newTransaction = balanceStore.addTransaction(amount, type, address, system);
-    return res.status(201).json({ success: true, transaction: newTransaction });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
-});
-
+//------------------------------------------------------------------------------
 // Ендпоїнт для отримання всіх транзакцій
 router.get('/transactions', (req, res) => {
   const transactions = balanceStore.getTransactions();
   res.status(200).json({ success: true, transactions });
+});
+
+//-----------------------------------------------------
+
+
+// // Ендпоїнт для отримання всіх сповіщень
+// router.get('/notifications', (req, res) => {
+//   try {
+//     const notifications = notificationStore.getNotifications();
+//     res.json({ notifications });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Не вдалося отримати сповіщення' });
+//   }
+// });
+
+// Отримуємо всі сповіщення користувача
+router.get('/notifications', (req, res) => {
+  const { userId } = req.query;
+  const userNotifications = notificationStore.getNotifications(userId);
+  res.json({ notifications: userNotifications });
+});
+//-----------------------------------------------------------
+// // Ендпоїнт для додавання нового сповіщення
+// router.post('/notifications', (req, res) => {
+//   const { type, details } = req.body;
+
+//   // Валідація типу сповіщення
+//   const validTypes = ['login', 'emailChange', 'passwordChange', 'balanceCredit', 'balanceDebit'];
+//   if (!validTypes.includes(type)) {
+//     return res.status(400).json({ error: 'Некоректний тип сповіщення' });
+//   }
+
+//   try {
+//     const notification = notificationStore.addNotification(type, details);
+//     res.status(201).json({ notification });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Не вдалося додати сповіщення' });
+//   }
+// });
+
+// Додаємо сповіщення
+router.post('/notifications', (req, res) => {
+  const { userId, type, time, details } = req.body;
+  const notification = notificationStore.addNotification(type, { userId, time, ...details });
+  res.status(201).json({ notification });
 });
 
 

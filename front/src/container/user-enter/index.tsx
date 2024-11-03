@@ -8,6 +8,7 @@ import "./index.css";
 
 const UserEnter: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
+  
 
   const handleError = (message: string) => {
     setError(message);

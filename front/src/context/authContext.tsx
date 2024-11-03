@@ -6,11 +6,24 @@ export interface AuthState {
   isAuthenticated: boolean;
   loginTime: string | null;
   loginHistory: Array<{ loginTime: string }>;
-  userEvents: Array<{ type: 'emailChange' | 'passwordChange', time: string }>;
+  userEvents: Array<Event>;
+}
+
+export interface Event {
+  type: 'emailChange' | 'passwordChange' | 'balanceCredit' | 'balanceDebit' | 'login';
+  time: string;
+  amount?: number;
 }
 
 export interface AuthAction {
-  type: 'LOGIN' | 'LOGOUT' | 'SET_USER' | 'CHANGE_EMAIL' | 'CHANGE_PASSWORD';
+  type: 
+    | 'LOGIN' 
+    | 'LOGOUT' 
+    | 'SET_USER' 
+    | 'CHANGE_EMAIL' 
+    | 'CHANGE_PASSWORD' 
+    | 'CHANGE_BALANCE' 
+    | 'ADD_EVENT'; 
   payload?: any;
 }
 
@@ -31,52 +44,93 @@ export const AuthContext = createContext<{
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
-      const newLoginTime = new Date().toISOString();
-      const updatedLoginHistory = [...state.loginHistory, { loginTime: newLoginTime }];
-      localStorage.setItem('loginTime', newLoginTime);
-      localStorage.setItem('loginHistory', JSON.stringify(updatedLoginHistory));
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+  const newLoginTime = new Date().toISOString();
+  const updatedLoginHistory = [...state.loginHistory, { loginTime: newLoginTime }];
+  
+  // Додаємо подію про новий вхід
+  const newLoginEvent: Event = { type: 'login', time: newLoginTime };
 
+  const updatedUserEvents = [...state.userEvents, newLoginEvent];
+
+  // Додаємо подію про попередній вхід, якщо він існує
+  const lastLoginTime = localStorage.getItem('loginTime');
+  if (lastLoginTime) {
+    const previousLoginEvent: Event = { type: 'login', time: lastLoginTime };
+    updatedUserEvents.unshift(previousLoginEvent);  // Додаємо попередню подію на початок масиву
+  }
+
+  // Оновлюємо `localStorage`
+  localStorage.setItem('loginTime', newLoginTime);
+  localStorage.setItem('loginHistory', JSON.stringify(updatedLoginHistory));
+  localStorage.setItem('token', action.payload.token);
+  localStorage.setItem('user', JSON.stringify(action.payload.user));
+
+  return {
+    ...state,
+    token: action.payload.token,
+    user: action.payload.user,
+    isAuthenticated: true,
+    loginTime: newLoginTime,
+    loginHistory: updatedLoginHistory,
+    userEvents: updatedUserEvents,
+  };
+
+  case 'LOGOUT':
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('loginTime');
+      localStorage.removeItem('loginHistory');
       return {
         ...state,
-        token: action.payload.token,
-        user: action.payload.user,
-        isAuthenticated: true,
-        loginTime: newLoginTime,
-        loginHistory: updatedLoginHistory,
+        token: null,
+        user: null,
+        isAuthenticated: false,
+        loginTime: null,
+        loginHistory: [], // Очищаємо історію входів
       };
 
-    case 'LOGOUT':
-      localStorage.clear();
-      return initialAuthState;
-
-    case 'SET_USER':
+    case 'CHANGE_EMAIL': {
+      const emailChangeEvent: Event = { type: 'emailChange', time: new Date().toISOString() };
+      const updatedUserEvents = [...state.userEvents, emailChangeEvent];
+      localStorage.setItem('userEvents', JSON.stringify(updatedUserEvents));
       return {
         ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-        isAuthenticated: !!action.payload.user,
-        loginTime: action.payload.loginTime,
-        loginHistory: action.payload.loginHistory,
-        userEvents: action.payload.userEvents,
+        userEvents: updatedUserEvents,
       };
+    }
 
-    case 'CHANGE_EMAIL':
-      const emailChangeEvent = { type: 'emailChange' as const, time: new Date().toISOString() };
-      const updatedUserEventsEmail = [...state.userEvents, emailChangeEvent];
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('userEvents', JSON.stringify(updatedUserEventsEmail));
-      return { ...state, user: action.payload.user, token: action.payload.token, userEvents: updatedUserEventsEmail };
+    case 'CHANGE_PASSWORD': {
+      const passwordChangeEvent: Event = { type: 'passwordChange', time: new Date().toISOString() };
+      const updatedUserEvents = [...state.userEvents, passwordChangeEvent];
+      localStorage.setItem('userEvents', JSON.stringify(updatedUserEvents));
+      return {
+        ...state,
+        userEvents: updatedUserEvents,
+      };
+    }
 
-    case 'CHANGE_PASSWORD':
-      const passwordChangeEvent = { type: 'passwordChange' as const, time: new Date().toISOString() };
-      const updatedUserEventsPassword = [...state.userEvents, passwordChangeEvent];
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('userEvents', JSON.stringify(updatedUserEventsPassword));
-      return { ...state, user: action.payload.user, token: action.payload.token, userEvents: updatedUserEventsPassword };
+    case 'CHANGE_BALANCE': {
+      const balanceChangeEvent: Event = {
+        type: action.payload.amount > 0 ? 'balanceCredit' : 'balanceDebit',
+        time: new Date().toISOString(),
+        amount: Math.abs(action.payload.amount),
+      };
+      const updatedUserEvents = [...state.userEvents, balanceChangeEvent];
+      localStorage.setItem('userEvents', JSON.stringify(updatedUserEvents));
+      return {
+        ...state,
+        userEvents: updatedUserEvents,
+      };
+    }
+
+    case 'ADD_EVENT': {
+      const updatedUserEvents = [...state.userEvents, action.payload.event];
+      localStorage.setItem('userEvents', JSON.stringify(updatedUserEvents));
+      return {
+        ...state,
+        userEvents: updatedUserEvents,
+      };
+    }
 
     default:
       return state;
@@ -87,21 +141,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
     const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const storedLoginHistory = localStorage.getItem('loginHistory');
     const storedLoginTime = localStorage.getItem('loginTime');
-    const storedLoginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
-    const storedUserEvents = JSON.parse(localStorage.getItem('userEvents') || '[]');
+    const storedUserEvents = localStorage.getItem('userEvents');
 
-    if (storedUser && storedToken) {
+    if (storedToken && storedUser) {
       dispatch({
         type: 'SET_USER',
         payload: {
-          user: storedUser,
           token: storedToken,
+          user: JSON.parse(storedUser),
+          loginHistory: storedLoginHistory ? JSON.parse(storedLoginHistory) : [],
           loginTime: storedLoginTime,
-          loginHistory: storedLoginHistory,
-          userEvents: storedUserEvents,
+          userEvents: storedUserEvents ? JSON.parse(storedUserEvents) : [],
         },
       });
     }

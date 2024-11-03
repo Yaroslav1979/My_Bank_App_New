@@ -18,6 +18,19 @@ const TransactionPage: React.FC = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Функція для форматування дати
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0'); // Додаємо провідний нуль
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Місяці починаються з 0
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0'); // Додаємо провідний нуль
+    const minutes = String(date.getMinutes()).padStart(2, '0'); // Додаємо провідний нуль
+
+    // Формат дати: "день.місяць.рік години:хвилини"
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  };
+
   useEffect(() => {
     const fetchTransactionDetails = async () => {
       try {
@@ -50,18 +63,21 @@ const TransactionPage: React.FC = () => {
 
   if (!transaction) {
     return <div>Завантаження...</div>;
-  }
+  }  
+  const isReceiving = transaction.type === 'credit';
 
   return (
     <Page pageTitle="Transaction Details">
       <div className='transaction-wrapper'>
         <Title>
-          <h1 className='transaction-title__sum'>{transaction.amount}</h1>
+        <h1 className='transaction-title__sum' style={{ color: isReceiving ? '#26BF80' : '#1D1D1F' }}>
+            {isReceiving ? `+${transaction.amount.toFixed(2)}` : `-${transaction.amount.toFixed(2)}`}
+          </h1>
         </Title>
         <div className='transaction-block'>
-          <p className='transaction__note'> Date: <span>{transaction.date}</span> </p>
-          <p className='transaction__note'> Address: <span>{transaction.address || transaction.system}</span> </p>
-          <p className='transaction__note'> Type: <span>{transaction.type === 'debit' ? 'Send' : 'Receive'}</span> </p>
+          <p className='transaction__note'> Дата: <span>{formatDate(transaction.date)}</span> </p>
+          <p className='transaction__note'> Адреса: <span>{transaction.address || transaction.system}</span> </p>
+          <p className='transaction__note'> Тип: <span>{transaction.type === 'debit' ? 'Send' : 'Receive'}</span> </p>
         </div>
       </div>
     </Page>
