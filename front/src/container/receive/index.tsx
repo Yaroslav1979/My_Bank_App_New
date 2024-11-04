@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import FormInput from "../../component/form-input";
 import Page from "../../component/page";
 import Button from "../../component/button";
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/authContext';
 import './index.css';
 
 import Stripe from '../../svg/stripe.svg';
@@ -14,6 +15,8 @@ const ReceiveSum: React.FC = () => {
   const [sum, setSum] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  const dispatch = authContext?.dispatch;
 
   const handlePayment = async (paymentSystem: string) => {
     setError(null);
@@ -38,6 +41,13 @@ const ReceiveSum: React.FC = () => {
 
       if (!response.ok) {
         throw new Error('Помилка при поповненні');
+      }
+
+      if (dispatch) {
+        dispatch({
+          type: 'CHANGE_BALANCE',
+          payload: { amount: +Number(sum) }, // дотатнє значення для зарахування коштів
+        });
       }
 
       navigate("/balance");  // Переходимо на сторінку балансу після успішного поповнення
@@ -90,3 +100,4 @@ const ReceiveSum: React.FC = () => {
 };
 
 export default ReceiveSum;
+

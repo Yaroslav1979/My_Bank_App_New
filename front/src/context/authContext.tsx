@@ -10,7 +10,7 @@ export interface AuthState {
 }
 
 export interface Event {
-  type: 'emailChange' | 'passwordChange' | 'balanceCredit' | 'balanceDebit' | 'login';
+  type: 'emailChange' | 'passwordChange' | 'credit' | 'debit' | 'login';
   time: string;
   amount?: number;
 }
@@ -111,7 +111,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
     case 'CHANGE_BALANCE': {
       const balanceChangeEvent: Event = {
-        type: action.payload.amount > 0 ? 'balanceCredit' : 'balanceDebit',
+        type: action.payload.amount > 0 ? 'credit' : 'debit',
         time: new Date().toISOString(),
         amount: Math.abs(action.payload.amount),
       };
@@ -170,105 +170,3 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 
 
-// import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
-
-// export interface AuthState {
-//   token: string | null;
-//   user: any | null;
-//   isAuthenticated: boolean;
-//   loginTime: string | null;
-//   loginHistory: Array<{ loginTime: string }> | null;
-// }
-
-// export interface AuthAction {
-//   type: 'LOGIN' | 'LOGOUT' | 'SET_USER';
-//   payload?: any;
-// }
-
-// const initialAuthState: AuthState = {
-//   token: null,
-//   user: null,
-//   isAuthenticated: false,
-//   loginTime: null,
-//   loginHistory: [], // Порожній масив історії входів
-// };
-
-// export const AuthContext = createContext<{
-//   state: AuthState;
-//   dispatch: React.Dispatch<AuthAction>;
-// } | null>(null);
-
-// const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-//   switch (action.type) {
-//     case 'LOGIN':
-//       const newLoginTime = new Date().toISOString(); // Час входу
-//       const updatedLoginHistory = [...(state.loginHistory || []), { loginTime: newLoginTime }]; // Оновлюємо історію входів
-
-//       // Зберігаємо історію входів та час останнього входу в localStorage
-//       localStorage.setItem('loginTime', newLoginTime);
-//       localStorage.setItem('loginHistory', JSON.stringify(updatedLoginHistory));
-
-//       return {
-//         ...state,
-//         token: action.payload.token,
-//         user: action.payload.user,
-//         isAuthenticated: true,
-//         loginTime: newLoginTime,
-//         loginHistory: updatedLoginHistory, // Оновлюємо стан історії входів
-//       };
-      
-//     case 'LOGOUT':
-//       localStorage.removeItem('token');
-//       localStorage.removeItem('user');
-//       localStorage.removeItem('loginTime');
-//       localStorage.removeItem('loginHistory');
-//       return {
-//         ...state,
-//         token: null,
-//         user: null,
-//         isAuthenticated: false,
-//         loginTime: null,
-//         loginHistory: [], // Очищаємо історію входів
-//       };
-      
-//     case 'SET_USER':
-//       return {
-//         ...state,
-//         user: action.payload.user,
-//         loginTime: action.payload.loginTime,
-//         loginHistory: action.payload.loginHistory,
-//         isAuthenticated: !!action.payload.user,
-//       };
-      
-//     default:
-//       return state;
-//   }
-// };
-
-// export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-//   const [state, dispatch] = useReducer(authReducer, initialAuthState);
-
-//   useEffect(() => {
-//     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-//     const storedToken = localStorage.getItem('token');
-//     const storedLoginTime = localStorage.getItem('loginTime');
-//     const storedLoginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
-
-//     if (storedUser && storedToken) {
-//       dispatch({
-//         type: 'SET_USER',
-//         payload: {
-//           user: storedUser,
-//           loginTime: storedLoginTime,
-//           loginHistory: storedLoginHistory, 
-//         },
-//       });
-//     }
-//   }, []);
-
-//   return (
-//     <AuthContext.Provider value={{ state, dispatch }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };

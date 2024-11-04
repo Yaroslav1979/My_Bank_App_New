@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import FormInput from "../../component/form-input";
 import Page from "../../component/page";
 import Button from "../../component/button";
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/authContext';
 import './index.css';
 
 const SendSum: React.FC = () => {
@@ -11,13 +12,14 @@ const SendSum: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  const dispatch = authContext?.dispatch;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    // Проста валідація
     if (!email || !sum) {
       setError("Введіть email та суму");
       return;
@@ -29,7 +31,6 @@ const SendSum: React.FC = () => {
     }
 
     try {
-      // Виконуємо POST-запит на сервер для транзакції
       const response = await fetch('http://localhost:4000/balance-transaction', {
         method: 'POST',
         headers: {
@@ -48,13 +49,18 @@ const SendSum: React.FC = () => {
         throw new Error(data.error || 'Щось пішло не так');
       }
 
-      // Показуємо повідомлення про успіх
       setSuccess('Транзакцію успішно виконано!');
-      
-      // Перенаправляємо користувача на сторінку балансу
+
+      // Додаємо подію про зняття коштів у нотифікації
+      if (dispatch) {
+        dispatch({
+          type: 'CHANGE_BALANCE',
+          payload: { amount: -Number(sum) }, // від'ємне значення для списання коштів
+        });
+      }
+
       navigate('/balance');
     } catch (err: any) {
-      // Виводимо повідомлення про помилку, якщо недостатньо коштів або інша помилка
       setError(err.message);
     }
   };

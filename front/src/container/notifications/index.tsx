@@ -28,6 +28,7 @@ export default function Notifications(): JSX.Element {
       <div className="notification-block">
         {userEvents.length > 0 ? (
           userEvents.slice().reverse().map((event, index) => {
+            if (!event || !event.type) return null;
             let title = '';
             let icon = null;
 
@@ -44,13 +45,13 @@ export default function Notifications(): JSX.Element {
                 title = 'Зміна пароля';
                 icon = <img src={IconSuccess} alt="Зміна пароля" className="notification__type-icon" />;
                 break;
-              case 'balanceCredit':
+              case 'credit':
                 title = `Ваш баланс поповнено на суму +${event.amount}`;
                 icon = <img src={IconSuccess} alt="Поповнення балансу" className="notification__type-icon" />;
                 break;
-              case 'balanceDebit':
+              case 'debit':
                 title = `З вашого балансу знято суму -${event.amount}`;
-                icon = <img src={IconWarning} alt="Зняття з балансу" className="notification__type-icon" />;
+                icon = <img src={IconSuccess} alt="Зняття з балансу" className="notification__type-icon" />;
                 break;
               default:
                 title = 'Невідома подія';
