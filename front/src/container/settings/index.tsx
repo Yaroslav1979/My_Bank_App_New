@@ -37,7 +37,9 @@ const Settings: React.FC = () => {
       setError("Токен не надано");
       return;
     }
-
+    if (!state.user) {
+      throw new Error('User is not authenticated');
+    }
      try {
       const currentEmail = state.user.email;
 

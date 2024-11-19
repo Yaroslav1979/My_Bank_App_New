@@ -8,15 +8,15 @@ class BalanceStore {
     return this.balance.toFixed(2); // Форматуємо баланс
   }
 
-  addTransaction(amount, type, address = '', system = '') {
+  addTransaction(id, amount, type, address = '', system = '') {
     if (type !== 'debit' && type !== 'credit') {
       throw new Error('Некоректний тип транзакції');
     }
-
+  
     if (type === 'debit' && this.balance < amount) {
       throw new Error('Недостатньо коштів');
     }
-
+  
     // Визначаємо source на основі system або адреси
     let source = '';
     if (system === 'Stripe') {
@@ -26,9 +26,10 @@ class BalanceStore {
     } else {
       source = 'human'; // Значення за замовчуванням для P2P транзакцій
     }
-
+  
     const transaction = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // Унікальний id для транзакції
+      userId: user.id, 
       amount,
       type,
       date: new Date().toISOString(),
@@ -36,10 +37,10 @@ class BalanceStore {
       system: system || '',   // Значення за замовчуванням
       source,                 // Додали поле source
     };
-
+  
     // Додаємо транзакцію на початок списку
     this.transactions.unshift(transaction);
-
+  
     // Оновлюємо баланс
     if (type === 'credit') {
       this.balance += amount;
@@ -81,6 +82,6 @@ class BalanceStore {
 }
 
 // Створюємо екземпляр класу BalanceStore для використання в ендпоїнтах
-const balanceStore = new BalanceStore();
-module.exports = balanceStore;
+// const balanceStore = new BalanceStore();
+module.exports = BalanceStore;
 

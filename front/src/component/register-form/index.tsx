@@ -66,15 +66,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
             type: 'LOGIN',
             payload: {
               token: result.token,
-              user: { email },
+              user: { email, id: result.id },
             },
-          });     
+          });
 
           localStorage.setItem('token', result.token);
-          localStorage.setItem('user', JSON.stringify({ email }));
+          localStorage.setItem('user', JSON.stringify({ email, id: result.id }));
+          localStorage.setItem('currentUserId', result.id);
 
           navigate('/balance');
-
         } else {
           throw new Error("Authentication context is unavailable.");
         }
@@ -96,7 +96,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
         const result = await response.json();
         console.log(result.message);
 
-      navigate('/verify-email', { state: { email } });
+        navigate('/verify-email', { state: { email } });
       }
     } catch (error) {
       onError((error as Error).message);
@@ -135,5 +135,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
     </div>
   );
 };
+
 
 export default RegisterForm;

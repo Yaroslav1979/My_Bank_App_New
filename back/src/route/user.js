@@ -94,19 +94,11 @@ router.post('/verify-email', function (req, res) {
       // Отримуємо вже існуючий токен
       const token = TokenStore.getToken(user.email);
       console.log("Token:", token);
-//       const oldToken = TokenStore.getToken(user.email);
-//       if (oldToken) {
-//         console.log("Deleting old token:", oldToken);
-//         TokenStore.deleteToken(user.email); // Видалення старого токена
-//       }
-
-//       const token = jwt.sign({ id: user.email }, SECRET_KEY, { expiresIn: 86400 });
-// TokenStore.saveToken(user.email, token); 
-// console.log("Saved token:", TokenStore.getToken(user.email));
-
+//       
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
-        token: token  
+        token: token,
+        userId: user.id,
       });
     } else {
       return res.status(400).json({
@@ -364,102 +356,72 @@ router.put('/settings-password', async (req, res) => {
 });
 // -------------------------------------------------
 
-// Ендпоїнт для отримання поточного балансу і історії транзакцій
+// Отримання поточного балансу та історії транзакцій для конкретного користувача
 router.get('/balance', (req, res) => {
+  const { userId } = req.query;
   try {
     res.json({
-      balance: balanceStore.getBalance(),
-      transactions: balanceStore.getTransactions(),
+      balance: balanceStore.getBalance(userId),
+      transactions: balanceStore.getTransactions(userId),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
-
-//------------------------------------------------------------
-
-// Ендпоінт для додавання нової транзакції
+//-------------------------------------------------------------------------
+// Додавання нової транзакції для конкретного користувача
 router.post('/balance-transaction', (req, res) => {
-  const {amount, type, address, system } = req.body;
+  const { userId, amount, type, address, system } = req.body;
 
-  // Перевіряємо, чи вказана сума
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
+  // Перевірка на наявність обов'язкових полів
+  if (!userId || !amount || amount <= 0 || !type) {
+    return res.status(400).json({ success: false, error: 'Відсутні обов\'язкові параметри або некоректні значення' });
   }
 
   try {
-    // Використовуємо метод класу BalanceStore для додавання транзакції
-    const newTransaction = balanceStore.addTransaction (amount, type, address, system);
+    // Додаємо транзакцію з userId
+    const newTransaction = balanceStore.addTransaction(userId, amount, type, address, system);
+
+    // Повертаємо успішний результат
     return res.status(201).json({ success: true, transaction: newTransaction });
   } catch (error) {
+    console.error("Помилка транзакції:", error);
     return res.status(400).json({ success: false, error: error.message });
   }
 });
-
-//---------------------------------------------------------------
-
-// Ендпоінт для отримання транзакції за ID
+//------------------------------------------------------------
+// Отримання транзакції за ID для конкретного користувача
 router.get('/transaction/:transactionId', (req, res) => {
+  const { userId } = req.query;
   const { transactionId } = req.params;
-  const transaction = balanceStore.getTransactionById(transactionId); // Використовуємо метод класу
+  const transaction = balanceStore.getTransactionById(userId, transactionId);
   if (transaction) {
     return res.status(200).json(transaction);
   } else {
     return res.status(404).json({ success: false, error: 'Transaction not found' });
   }
 });
-
-
-//------------------------------------------------------------------------------
-// Ендпоїнт для отримання всіх транзакцій
+//-----------------------------------------------------------------
+// Отримання всіх транзакцій для конкретного користувача
 router.get('/transactions', (req, res) => {
-  const transactions = balanceStore.getTransactions();
+  const { userId } = req.query;
+  const transactions = balanceStore.getTransactions(userId);
   res.status(200).json({ success: true, transactions });
 });
 
-//-----------------------------------------------------
+//------------------- Ендпоїнти сповіщень ---------------------
 
-
-// // Ендпоїнт для отримання всіх сповіщень
-// router.get('/notifications', (req, res) => {
-//   try {
-//     const notifications = notificationStore.getNotifications();
-//     res.json({ notifications });
-//   } catch (error) {
-//     res.status(500).json({ error: 'Не вдалося отримати сповіщення' });
-//   }
-// });
-
-// Отримуємо всі сповіщення користувача
+// Отримання всіх сповіщень для конкретного користувача
 router.get('/notifications', (req, res) => {
   const { userId } = req.query;
   const userNotifications = notificationStore.getNotifications(userId);
   res.json({ notifications: userNotifications });
 });
-//-----------------------------------------------------------
-// // Ендпоїнт для додавання нового сповіщення
-// router.post('/notifications', (req, res) => {
-//   const { type, details } = req.body;
 
-//   // Валідація типу сповіщення
-//   const validTypes = ['login', 'emailChange', 'passwordChange', 'balanceCredit', 'balanceDebit'];
-//   if (!validTypes.includes(type)) {
-//     return res.status(400).json({ error: 'Некоректний тип сповіщення' });
-//   }
-
-//   try {
-//     const notification = notificationStore.addNotification(type, details);
-//     res.status(201).json({ notification });
-//   } catch (error) {
-//     res.status(500).json({ error: 'Не вдалося додати сповіщення' });
-//   }
-// });
-
-// Додаємо сповіщення
+// Додавання сповіщення для конкретного користувача
 router.post('/notifications', (req, res) => {
   const { userId, type, time, details } = req.body;
-  const notification = notificationStore.addNotification(type, { userId, time, ...details });
+  const notification = notificationStore.addNotification(userId, type, { time, ...details });
   res.status(201).json({ notification });
 });
 

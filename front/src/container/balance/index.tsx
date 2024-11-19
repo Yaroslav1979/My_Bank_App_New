@@ -22,10 +22,15 @@ const BalancePage: React.FC = () => {
 
   useEffect(() => {
     const fetchBalanceData = async () => {
+      if (!authContext?.state.user?.id) return; // Перевіряємо наявність userId
+
       try {
-        const response = await fetch('http://localhost:4000/balance', {
+        const response = await fetch(`http://localhost:4000/balance/${authContext.state.user.id}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authContext?.state.token}` },
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${authContext.state.token}` 
+          },
         });
         
         if (!response.ok) {
@@ -34,7 +39,6 @@ const BalancePage: React.FC = () => {
   
         const data = await response.json();
         
-        // Сортуємо транзакції у зворотному порядку за датою, щоб останні були зверху
         const sortedTransactions = data.transactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
         setBalance(data.balance);
@@ -51,22 +55,19 @@ const BalancePage: React.FC = () => {
     navigate(`/transaction/${transactionId}`);
   };
 
-    // Додавання сповіщення при отриманні транзакцій
-    const updateBalance = (newTransaction: any) => {
-      const amount = newTransaction.amount;
-      if (newTransaction.type === 'credit') {
-        setBalance(prevBalance => prevBalance + amount);
-        addBalanceNotification('balanceCredit', amount);
-      } else if (newTransaction.type === 'debit') {
-        setBalance(prevBalance => prevBalance - amount);
-        addBalanceNotification('balanceDebit', amount);
-      }
-    };
+  const updateBalance = (newTransaction: any) => {
+    const amount = newTransaction.amount;
+    if (newTransaction.type === 'credit') {
+      setBalance(prevBalance => prevBalance + amount);
+      addBalanceNotification('balanceCredit', amount);
+    } else if (newTransaction.type === 'debit') {
+      setBalance(prevBalance => prevBalance - amount);
+      addBalanceNotification('balanceDebit', amount);
+    }
+  };
 
-  // Оновлення сповіщень після зміни балансу
   const addBalanceNotification = async (type: 'balanceCredit' | 'balanceDebit', amount: number) => {
-    if (authContext) {
-      // Додаємо локальне сповіщення
+    if (authContext && authContext.state.user) {
       authContext.dispatch({
         type: 'ADD_EVENT',
         payload: {
@@ -76,16 +77,14 @@ const BalancePage: React.FC = () => {
         },
       });
 
-      // Надсилаємо сповіщення на сервер
       try {
-        const response = await fetch('http://localhost:4000/notifications', {
+        const response = await fetch(`http://localhost:4000/notifications/${authContext.state.user.id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authContext.state.token}`
           },
           body: JSON.stringify({
-            userId: authContext.state.user.id,
             type,
             time: new Date().toISOString(),
             details: { amount: Math.abs(amount) }
@@ -102,6 +101,7 @@ const BalancePage: React.FC = () => {
       console.error("AuthContext is null");
     }
   };
+
   return (
     <section className="start balance"> 
       <img src={BackgroundBalance} alt="background" className="bgd-small" />
@@ -116,7 +116,6 @@ const BalancePage: React.FC = () => {
         <Title> 
           <div className="title__balance ">
             $ <span className="dollar">{`${balance}`}
-              {/* <span className="cent">{`.00`}</span > */}
             </span> 
           </div>
         </Title>
@@ -141,7 +140,7 @@ const BalancePage: React.FC = () => {
               key={transaction.id}
               onClick={() => {
                 handleTransactionClick(transaction.id);
-                updateBalance(transaction); // Виклик оновлення балансу тільки при натисканні
+                updateBalance(transaction); 
               }}
               className="transaction-item"
             >
@@ -166,6 +165,7 @@ const BalancePage: React.FC = () => {
 };
 
 export default BalancePage;
+
 
 
 

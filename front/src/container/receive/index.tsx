@@ -1,9 +1,9 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/authContext';
 import FormInput from "../../component/form-input";
 import Page from "../../component/page";
 import Button from "../../component/button";
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/authContext';
 import './index.css';
 
 import Stripe from '../../svg/stripe.svg';
@@ -17,45 +17,53 @@ const ReceiveSum: React.FC = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
   const dispatch = authContext?.dispatch;
+  
+  // Отримуємо userId безпосередньо з state
+  const userId = authContext?.state.user?.id || null;
 
   const handlePayment = async (paymentSystem: string) => {
     setError(null);
-
+  
     if (!sum || Number(sum) <= 0 || isNaN(Number(sum))) {
       setError("Сума має бути більша за 0 і бути числом");
       return;
     }
-
+  
+    const requestData = {
+      amount: Number(sum),
+      type: 'credit', // Поповнення (credit)
+      system: paymentSystem,
+      id: userId, // Додаємо userId
+    };
+  
+    console.log("Sending request with data:", requestData);  // Логування даних
+  
     try {
       const response = await fetch('http://localhost:4000/balance-transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authContext?.state.token}`
         },
-        body: JSON.stringify({
-          amount: Number(sum),
-          type: 'credit',  // Це поповнення, тому тип "credit"
-          system: paymentSystem, // Можна також передавати інформацію про систему
-        }),
+        body: JSON.stringify(requestData),
       });
-
+  
       if (!response.ok) {
         throw new Error('Помилка при поповненні');
       }
-
+  
       if (dispatch) {
         dispatch({
           type: 'CHANGE_BALANCE',
           payload: { amount: +Number(sum) }, // дотатнє значення для зарахування коштів
         });
       }
-
+  
       navigate("/balance");  // Переходимо на сторінку балансу після успішного поповнення
     } catch (err: any) {
       setError(err.message);
     }
   };
-
   return (
     <div className='page--settings'>
       <Page pageTitle="Receive">

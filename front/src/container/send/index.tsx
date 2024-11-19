@@ -35,6 +35,7 @@ const SendSum: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authContext?.state.token} ?? ''`
         },
         body: JSON.stringify({ 
           amount: Number(sum),

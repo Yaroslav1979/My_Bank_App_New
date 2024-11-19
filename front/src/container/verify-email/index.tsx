@@ -29,6 +29,7 @@ const VerifyEmail: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authContext?.state.token} ?? ''`
         },
         body: JSON.stringify({ email, verificationCode }),
       });
@@ -45,29 +46,20 @@ const VerifyEmail: React.FC = () => {
         console.log('Dispatching token:', result.token);
 
         localStorage.setItem('token', result.token);
-       localStorage.setItem('user', JSON.stringify({ email }));
 
+        //-------------------------------------------------------------------
+        localStorage.setItem('user', JSON.stringify({ email, id: result.id }));
+        localStorage.setItem('currentUserId', result.id);
+        //---------------------------------------------------------------
+        
         authContext.dispatch({
           type: 'LOGIN',
           payload: {
             token: result.token,
-            user: { email },
+            user: { email, id: result.id },
           },
         });
-        
 
-        // await fetch('http://localhost:4000/notifications', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     userId: result.userId,   // Додаємо userId
-        //     type: 'login',           // Тип події
-        //     time: new Date().toISOString()
-        //   }),
-        // });
-        
         navigate('/balance');
       } else {
         throw new Error("Authentication context is unavailable.");
@@ -112,6 +104,7 @@ const VerifyEmail: React.FC = () => {
     </Page>
   );
 };
+
 
 export default VerifyEmail;
 

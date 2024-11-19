@@ -1,10 +1,10 @@
-// const bcrypt = require('bcryptjs'); - для хешування пароля
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const SECRET_KEY = process.env.SECRET_KEY;
 const TokenStore = require('./token-store');
+const BalanceStore = require('./balance-store');
 
-class User {
+class User { 
   static #list = [];
   static #count = Math.floor(Math.random() * 90000) + 10000;
 
@@ -17,6 +17,7 @@ class User {
     this.isVerified = false;
     this.date = new Date().getTime();
     this.token = jwt.sign({ id: this.id, email: this.email }, SECRET_KEY, { expiresIn: 86400 }); // Створення токену
+    this.balanceStore = new BalanceStore();
     TokenStore.saveToken(this.email, this.token);
   }
 
