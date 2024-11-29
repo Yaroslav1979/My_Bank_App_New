@@ -24,6 +24,7 @@ class User {
   verifyPassword = (password) => bcrypt.compareSync(password, this.password); // Перевірка паролю
 
   static add = (user) => {
+    console.log('Adding user:', user);
     this.#list.push(user);
   };
 
@@ -32,6 +33,7 @@ class User {
   };
 
   static getById = (id) => {
+    console.log('User list:', this.#list);
     return this.#list.find((user) => user.id === id);
   };
 
@@ -68,6 +70,26 @@ class User {
       user.password = bcrypt.hashSync(password, 8); // Хешування нового пароля
     }
   };
+
+   // Отримання userId із токена
+   static getUserIdFromToken(token) {
+    try {
+      const decoded = jwt.verify(token, SECRET_KEY); // Розшифровка токена
+      return decoded.id; // Повертаємо userId
+    } catch (error) {
+      console.error('Невірний токен:', error.message);
+      return null; // Токен недійсний
+    }
+  }
+
+  // Пошук користувача за токеном
+  static getUserByToken(token) {
+    const userId = this.getUserIdFromToken(token);
+    if (!userId) {
+      return null; // Невірний токен
+    }
+    return this.getById(userId); // Повертаємо користувача
+  }
 }
 
 module.exports = User;

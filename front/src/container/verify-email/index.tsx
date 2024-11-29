@@ -29,7 +29,7 @@ const VerifyEmail: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authContext?.state.token} ?? ''`
+          'Authorization': `Bearer ${authContext?.state.token}`
         },
         body: JSON.stringify({ email, verificationCode }),
       });
@@ -40,18 +40,18 @@ const VerifyEmail: React.FC = () => {
       }
 
       const result = await response.json();
-      console.log('Token from server:', result.token);
+
+      if (!result.id || !result.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      localStorage.setItem('token', result.token);
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ email, id: result.id })
+      );
 
       if (authContext && authContext.dispatch) {
-        console.log('Dispatching token:', result.token);
-
-        localStorage.setItem('token', result.token);
-
-        //-------------------------------------------------------------------
-        localStorage.setItem('user', JSON.stringify({ email, id: result.id }));
-        localStorage.setItem('currentUserId', result.id);
-        //---------------------------------------------------------------
-        
         authContext.dispatch({
           type: 'LOGIN',
           payload: {
@@ -59,11 +59,11 @@ const VerifyEmail: React.FC = () => {
             user: { email, id: result.id },
           },
         });
-
-        navigate('/balance');
       } else {
         throw new Error("Authentication context is unavailable.");
       }
+
+      navigate('/balance');
     } catch (error) {
       setError((error as Error).message);
     }
@@ -104,8 +104,7 @@ const VerifyEmail: React.FC = () => {
     </Page>
   );
 };
-
-
 export default VerifyEmail;
+
 
 

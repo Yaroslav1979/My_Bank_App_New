@@ -49,6 +49,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authContext?.state.token}`
           },
           body: JSON.stringify({ email, password }),
         });
@@ -84,6 +85,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onError, children, mode }) 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authContext?.state.token}`
           },
           body: JSON.stringify({ email, password }),
         });

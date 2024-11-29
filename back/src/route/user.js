@@ -98,7 +98,7 @@ router.post('/verify-email', function (req, res) {
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',
         token: token,
-        userId: user.id,
+        id: user.id,
       });
     } else {
       return res.status(400).json({
@@ -270,6 +270,9 @@ router.put('/settings-email', async (req, res) => {
     if (!TokenStore.isValidToken(currentEmail, tokenValue)) {
       return res.status(401).json({ error: 'Недійсний токен для цього email' });
     }
+    if (decoded.id !== user.id) {
+      return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
+    }
 
     // Шукаємо користувача по email
     const user = User.getByEmail(currentEmail); 
@@ -354,17 +357,28 @@ router.put('/settings-password', async (req, res) => {
     res.status(500).json({ error: 'Ой, щось пішло не так' });
   }
 });
-// -------------------------------------------------
 
-// Отримання поточного балансу та історії транзакцій для конкретного користувача
-router.get('/balance', (req, res) => {
-  const { userId } = req.query;
+   //------------------------------------------------------------------
+router.get('/balance/:id', (req, res) => {
+  const { id } = req.params; // Отримуємо id користувача з параметрів URL
+  console.log('User ID:', id); // Логуємо отриманий userId
+
   try {
+    const user = User.getById(id); // Отримуємо користувача (цей метод має повертати користувача за id)
+    console.log('Found user:', user); 
+    if (!user || !user.balanceStore) {
+      throw new Error('User or balanceStore not found');
+    }
+
+    const balance = user.balanceStore.getBalance(id); // Викликаємо getBalance через balanceStore
+    const transactions = user.balanceStore.getTransactions(id);
+
     res.json({
-      balance: balanceStore.getBalance(userId),
-      transactions: balanceStore.getTransactions(userId),
+      balance: balance,
+      transactions: transactions,
     });
   } catch (error) {
+    console.error('Error fetching balance:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -373,9 +387,16 @@ router.get('/balance', (req, res) => {
 router.post('/balance-transaction', (req, res) => {
   const { userId, amount, type, address, system } = req.body;
 
+  console.log("Отримано запит:", req.body);
+
   // Перевірка на наявність обов'язкових полів
   if (!userId || !amount || amount <= 0 || !type) {
     return res.status(400).json({ success: false, error: 'Відсутні обов\'язкові параметри або некоректні значення' });
+  }
+
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!TokenStore.isValidToken(userId, token)) {
+    return res.status(401).json({ success: false, error: 'Невалідний токен' });
   }
 
   try {
@@ -413,7 +434,23 @@ router.get('/transactions', (req, res) => {
 
 // Отримання всіх сповіщень для конкретного користувача
 router.get('/notifications', (req, res) => {
+  const { token } = req.headers; // Токен отримується з заголовків
+  if (!token) {
+    return res.status(401).json({ error: 'Токен не надано' });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, SECRET_KEY); // Розшифрування токена
+  } catch (error) {
+    return res.status(401).json({ error: 'Недійсний токен' });
+  }
+
   const { userId } = req.query;
+  if (!userId || decoded.id !== userId) {
+    return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
+  }
+
   const userNotifications = notificationStore.getNotifications(userId);
   res.json({ notifications: userNotifications });
 });

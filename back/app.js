@@ -4,6 +4,7 @@ const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const dotenv = require('dotenv')
+const cors = require('cors');
 
 // const webpack = require('webpack')
 // const webpackDevMiddleware = require('webpack-dev-middleware')
@@ -41,19 +42,23 @@ dotenv.config()
 //     },
 //   }),
 // )
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE',
-  )
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization',
-  )
-  next()
-})
+app.use(cors({
+  origin: 'http://localhost:3000', // Дозволяє запити з клієнта
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Дозволені методи
+  allowedHeaders: ['Content-Type', 'Authorization'], // Дозволені заголовки
+}));
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*')
+//   res.header(
+//     'Access-Control-Allow-Methods',
+//     'GET, POST, PUT, DELETE',
+//   )
+//   res.header(
+//     'Access-Control-Allow-Headers',
+//     'Content-Type, Authorization',
+//   )
+//   next()
+// })
 
 app.use(logger('dev'))
 app.use(express.json())

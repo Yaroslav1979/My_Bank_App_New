@@ -16,10 +16,24 @@ const ReceiveSum: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
+
+  console.log('AuthContext:', authContext); // Логування контексту
+  console.log('User from AuthContext:', authContext?.state.user); //
+
   const dispatch = authContext?.dispatch;
   
   // Отримуємо userId безпосередньо з state
-  const userId = authContext?.state.user?.id || null;
+  
+
+  if (!authContext || !authContext.state.user?.id) {
+    console.error('User ID is missing. Cannot proceed with payment.');
+    return (
+      <div className="error">
+        <p>Не вдалося визначити користувача. Будь ласка, увійдіть у свій акаунт.</p>
+      </div>
+    );
+  }
+  const userId = authContext.state.user.id;
 
   const handlePayment = async (paymentSystem: string) => {
     setError(null);
@@ -33,7 +47,7 @@ const ReceiveSum: React.FC = () => {
       amount: Number(sum),
       type: 'credit', // Поповнення (credit)
       system: paymentSystem,
-      id: userId, // Додаємо userId
+      userId, // Додаємо userId
     };
   
     console.log("Sending request with data:", requestData);  // Логування даних
