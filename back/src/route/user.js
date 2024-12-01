@@ -142,7 +142,7 @@ router.post('/user-enter', async function (req, res) {
         message: 'Користувач не верифікований'
       });
     }
-
+    
     // Перевірка наявності токена користувача у сховищі
     const token = TokenStore.getToken(user.email);
     if (!token) {
@@ -154,7 +154,8 @@ router.post('/user-enter', async function (req, res) {
     // Повертаємо токен, якщо користувач успішно увійшов
     return res.status(200).json({
       message: 'Ви успішно увійшли в аккаунт',
-      token: token // Повертаємо вже наявний токен
+      token: token, // Повертаємо вже наявний токен
+      id: user.id,
     });
 
   } catch (e) {
@@ -359,63 +360,91 @@ router.put('/settings-password', async (req, res) => {
 });
 
    //------------------------------------------------------------------
-router.get('/balance/:id', (req, res) => {
-  const { id } = req.params; // Отримуємо id користувача з параметрів URL
-  console.log('User ID:', id); // Логуємо отриманий userId
-
-  try {
-    const user = User.getById(id); // Отримуємо користувача (цей метод має повертати користувача за id)
-    console.log('Found user:', user); 
-    if (!user || !user.balanceStore) {
-      throw new Error('User or balanceStore not found');
+   router.get('/balance/:userId', (req, res) => {
+    const { userId } = req.params; // Отримуємо userId з параметрів URL
+    console.log('User ID:', userId); // Логуємо отриманий userId
+  
+    try {
+      const user = User.getById(parseInt(userId, 10)); // Отримуємо користувача за userId
+      console.log('Found user:', user);
+  
+      if (!user) {
+        throw new Error(`Користувач з ID ${userId} не знайдений`);
+      }
+  
+      if (!user.balanceStore.getBalance(userId)) {
+        console.log(`Баланс для користувача з ID ${userId} відсутній. Створюємо запис.`);
+        user.balanceStore.resetBalance(userId, 0.00);
+      }
+  
+      const balance = user.balanceStore.getBalance(userId); // Викликаємо getBalance через balanceStore
+      const transactions = user.balanceStore.getTransactions(userId);
+  
+      res.json({
+        balance,
+        transactions,
+      });
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      res.status(500).json({ error: error.message });
     }
-
-    const balance = user.balanceStore.getBalance(id); // Викликаємо getBalance через balanceStore
-    const transactions = user.balanceStore.getTransactions(id);
-
-    res.json({
-      balance: balance,
-      transactions: transactions,
-    });
-  } catch (error) {
-    console.error('Error fetching balance:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  });
 //-------------------------------------------------------------------------
 // Додавання нової транзакції для конкретного користувача
-router.post('/balance-transaction', (req, res) => {
-  const { userId, amount, type, address, system } = req.body;
 
-  console.log("Отримано запит:", req.body);
+router.post('/balance-transaction/:userId', (req, res) => {
+  const { amount, type, address, system } = req.body;
+  const { userId } = req.params; // Отримуємо userId з параметра в URL
 
-  // Перевірка на наявність обов'язкових полів
-  if (!userId || !amount || amount <= 0 || !type) {
+  console.log("Отримано запит для користувача ID:", userId);
+  
+  if (!amount || amount <= 0 || !type) {
     return res.status(400).json({ success: false, error: 'Відсутні обов\'язкові параметри або некоректні значення' });
   }
 
   const token = req.headers.authorization?.split(' ')[1];
-  if (!TokenStore.isValidToken(userId, token)) {
-    return res.status(401).json({ success: false, error: 'Невалідний токен' });
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Відсутній токен авторизації' });
   }
 
   try {
-    // Додаємо транзакцію з userId
-    const newTransaction = balanceStore.addTransaction(userId, amount, type, address, system);
+    const decoded = jwt.verify(token, SECRET_KEY);
+    console.log("Токен верифіковано:", decoded);
 
-    // Повертаємо успішний результат
+    // Перевірка, чи відповідає токен userId користувача
+    if (Number(decoded.id) !== Number(userId)) {
+      return res.status(401).json({ success: false, error: 'Токен не відповідає користувачу' });
+    }
+
+    const user = User.getById(Number(userId)); // Отримуємо користувача
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Користувач не знайдений' });
+    }
+
+    const newTransaction = user.balanceStore.addTransaction(userId, amount, type, address, system);
+
     return res.status(201).json({ success: true, transaction: newTransaction });
   } catch (error) {
-    console.error("Помилка транзакції:", error);
-    return res.status(400).json({ success: false, error: error.message });
+    console.error("Помилка:", error.message);
+    return res.status(401).json({ success: false, error: 'Невалідний токен' });
   }
 });
+
+
 //------------------------------------------------------------
 // Отримання транзакції за ID для конкретного користувача
 router.get('/transaction/:transactionId', (req, res) => {
   const { userId } = req.query;
   const { transactionId } = req.params;
-  const transaction = balanceStore.getTransactionById(userId, transactionId);
+
+  console.log('Запит на транзакцію:', { userId, transactionId });
+
+  const user = User.getById(Number(userId)); // Отримуємо користувача
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Користувач не знайдений' });
+    }
+
+  const transaction = user.balanceStore.getTransactionById(userId, transactionId);
   if (transaction) {
     return res.status(200).json(transaction);
   } else {
@@ -433,32 +462,58 @@ router.get('/transactions', (req, res) => {
 //------------------- Ендпоїнти сповіщень ---------------------
 
 // Отримання всіх сповіщень для конкретного користувача
+
 router.get('/notifications', (req, res) => {
-  const { token } = req.headers; // Токен отримується з заголовків
-  if (!token) {
-    return res.status(401).json({ error: 'Токен не надано' });
+  const { token } = req.headers;
+
+  const user = User.getUserByToken(token);
+  if (!user) {
+    return res.status(404).json({ error: 'Користувача не знайдено' });
   }
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, SECRET_KEY); // Розшифрування токена
-  } catch (error) {
-    return res.status(401).json({ error: 'Недійсний токен' });
-  }
-
-  const { userId } = req.query;
-  if (!userId || decoded.id !== userId) {
-    return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
-  }
-
-  const userNotifications = notificationStore.getNotifications(userId);
-  res.json({ notifications: userNotifications });
+  const notifications = user.notificationStore.getNotifications(user.id);
+  res.json({ notifications });
 });
+//-----------------------------------------------------
+// router.get('/notifications', (req, res) => {
+//   const { token } = req.headers; // Токен отримується з заголовків
+//   if (!token) {
+//     return res.status(401).json({ error: 'Токен не надано' });
+//   }
+
+//   let decoded;
+//   try {
+//     decoded = jwt.verify(token, SECRET_KEY); // Розшифрування токена
+//   } catch (error) {
+//     return res.status(401).json({ error: 'Недійсний токен' });
+//   }
+
+//   const { userId } = req.query;
+//   if (!userId || decoded.id !== userId) {
+//     return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
+//   }
+
+//   const userNotifications = notificationStore.getNotifications(userId);
+//   res.json({ notifications: userNotifications });
+// });
 
 // Додавання сповіщення для конкретного користувача
+// router.post('/notifications', (req, res) => {
+//   const { userId, type, time, details } = req.body;
+//   const notification = notificationStore.addNotification(userId, type, { time, ...details });
+//   res.status(201).json({ notification });
+// });
+//-------------------------------------------------
+// Додавання нового сповіщення
 router.post('/notifications', (req, res) => {
-  const { userId, type, time, details } = req.body;
-  const notification = notificationStore.addNotification(userId, type, { time, ...details });
+  const { token, type, details } = req.body;
+
+  const user = User.getUserByToken(token);
+  if (!user) {
+    return res.status(404).json({ error: 'Користувача не знайдено' });
+  }
+
+  const notification = user.notificationStore.addNotification(user.id, type, details);
   res.status(201).json({ notification });
 });
 

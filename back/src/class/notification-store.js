@@ -9,6 +9,7 @@ class NotificationStore {
       id: Date.now().toString(),
       type,                // Тип події (login, emailChange, passwordChange, balanceCredit, balanceDebit)
       time: new Date().toISOString(),
+      userId,
       ...details,          // Додаткові параметри: сума транзакції, email тощо
     };
     this.notifications.push(notification);
@@ -21,11 +22,11 @@ class NotificationStore {
   }
 
   // Очищення всіх сповіщень (наприклад, під час виходу користувача)
-  clearNotifications() {
-    this.notifications = [];
+  clearNotifications(userId) {
+    this.notifications = this.notifications.filter(n => n.userId !== userId);
   }
 }
 
 // Створюємо екземпляр класу для використання в ендпоїнтах
-const notificationStore = new NotificationStore();
-module.exports = notificationStore;
+
+module.exports = NotificationStore;

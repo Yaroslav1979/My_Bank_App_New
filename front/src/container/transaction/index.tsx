@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Title from "../../component/title";
 import Page from '../../component/page';
+import { AuthContext } from '../../context/authContext';
 import './index.css';
 
 interface Transaction {
@@ -18,23 +19,34 @@ const TransactionPage: React.FC = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Функція для форматування дати
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0'); // Додаємо провідний нуль
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Місяці починаються з 0
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0'); // Додаємо провідний нуль
-    const minutes = String(date.getMinutes()).padStart(2, '0'); // Додаємо провідний нуль
+  const authContext = useContext(AuthContext);
 
-    // Формат дати: "день.місяць.рік години:хвилини"
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
-  };
+// Функція для форматування дати
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
 
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
+
+  // Викликаємо useEffect без умов
   useEffect(() => {
+    if (!authContext || !authContext.state.user?.id) {
+      console.error('User ID is missing. Cannot proceed with payment.');
+      setError('Не вдалося визначити користувача. Будь ласка, увійдіть у свій акаунт.');
+      return;
+    }
+
+    const userId = authContext.state.user.id;  // Отримуємо userId з контексту
+
     const fetchTransactionDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/transaction/${transactionId}`, {
+        const response = await fetch(`http://localhost:4000/transaction/${transactionId}?userId=${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -45,7 +57,7 @@ const TransactionPage: React.FC = () => {
           throw new Error('Не вдалося завантажити деталі транзакції');
         }
 
-        const data: Transaction = await response.json(); // Використання типізації
+        const data: Transaction = await response.json();
         setTransaction(data);
       } catch (err: any) {
         setError(err.message);
@@ -55,22 +67,25 @@ const TransactionPage: React.FC = () => {
     if (transactionId) {
       fetchTransactionDetails();
     }
-  }, [transactionId]);
+  }, [transactionId, authContext]); // Додаємо authContext до списку залежностей
 
+  // Обробка помилок
   if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>; // Перевірка на помилку
+    return <p style={{ color: 'red' }}>{error}</p>;
   }
 
+  // Обробка стану завантаження
   if (!transaction) {
     return <div>Завантаження...</div>;
-  }  
+  }
+
   const isReceiving = transaction.type === 'credit';
 
   return (
     <Page pageTitle="Transaction Details">
       <div className='transaction-wrapper'>
         <Title>
-        <h1 className='transaction-title__sum' style={{ color: isReceiving ? '#26BF80' : '#1D1D1F' }}>
+          <h1 className='transaction-title__sum' style={{ color: isReceiving ? '#26BF80' : '#1D1D1F' }}>
             {isReceiving ? `+${transaction.amount.toFixed(2)}` : `-${transaction.amount.toFixed(2)}`}
           </h1>
         </Title>
@@ -85,6 +100,10 @@ const TransactionPage: React.FC = () => {
 };
 
 export default TransactionPage;
+
+
+
+
 
 
 

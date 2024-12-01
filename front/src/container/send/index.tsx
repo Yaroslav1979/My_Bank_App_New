@@ -15,6 +15,15 @@ const SendSum: React.FC = () => {
   const authContext = useContext(AuthContext);
   const dispatch = authContext?.dispatch;
 
+  if (!authContext || !authContext.state.user?.id) {
+    console.error('User ID is missing. Cannot proceed with payment.');
+    return (
+      <div className="error">
+        <p>Не вдалося визначити користувача. Будь ласка, увійдіть у свій акаунт.</p>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -31,20 +40,22 @@ const SendSum: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/balance-transaction', {
+      const response = await fetch(`http://localhost:4000/balance-transaction/${authContext.state.user.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authContext?.state.token} ?? ''`
+          'Authorization': `Bearer ${authContext?.state.token} || ''`
         },
         body: JSON.stringify({ 
           amount: Number(sum),
           type: 'debit',
-          recipient: email, 
+          address: email, 
         }),
       });
 
       const data = await response.json();
+      console.log('Response status:', response.status);
+    console.log('Response data:', data);
 
       if (!data.success) {
         throw new Error(data.error || 'Щось пішло не так');
@@ -62,6 +73,7 @@ const SendSum: React.FC = () => {
 
       navigate('/balance');
     } catch (err: any) {
+      console.error('Error:', err);
       setError(err.message);
     }
   };

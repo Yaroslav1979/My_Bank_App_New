@@ -33,7 +33,7 @@ const ReceiveSum: React.FC = () => {
       </div>
     );
   }
-  const userId = authContext.state.user.id;
+  // const userId = authContext.state.user.id;
 
   const handlePayment = async (paymentSystem: string) => {
     setError(null);
@@ -47,13 +47,12 @@ const ReceiveSum: React.FC = () => {
       amount: Number(sum),
       type: 'credit', // Поповнення (credit)
       system: paymentSystem,
-      userId, // Додаємо userId
     };
   
     console.log("Sending request with data:", requestData);  // Логування даних
   
     try {
-      const response = await fetch('http://localhost:4000/balance-transaction', {
+      const response = await fetch(`http://localhost:4000/balance-transaction/${authContext.state.user.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +68,7 @@ const ReceiveSum: React.FC = () => {
       if (dispatch) {
         dispatch({
           type: 'CHANGE_BALANCE',
-          payload: { amount: +Number(sum) }, // дотатнє значення для зарахування коштів
+          payload: { amount: +Number(sum) }, // Достатнє значення для зарахування коштів
         });
       }
   
@@ -78,6 +77,7 @@ const ReceiveSum: React.FC = () => {
       setError(err.message);
     }
   };
+  
   return (
     <div className='page--settings'>
       <Page pageTitle="Receive">
