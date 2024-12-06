@@ -1,11 +1,17 @@
 
-import React, { useContext } from 'react'; 
+import React, { useContext, useEffect, useState } from 'react';
 import './index.css';
 import Notification from '../../component/notification';
 import Page from '../../component/page';
 import IconWarning from '../../svg/danger.svg';
 import IconSuccess from '../../svg/bell-black.svg';
 import { AuthContext } from '../../context/authContext';
+
+interface UserEvent {
+  type: string;
+  amount?: number;
+  time?: string;
+}
 
 const getTimeAgo = (eventTime: string | null): string => {
   if (!eventTime) return 'Щойно';
@@ -21,13 +27,47 @@ const getTimeAgo = (eventTime: string | null): string => {
 
 export default function Notifications(): JSX.Element {
   const authContext = useContext(AuthContext);
-  const userEvents = authContext?.state.userEvents || [];
+  const { state, dispatch } = authContext || { state: null, dispatch: () => null };
+  const [loading, setLoading] = useState(true);
+
+  const userEvents: UserEvent[] = state?.userEvents || [];
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('/notifications', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${state?.token}` },
+        });
+
+        if (response.ok) {
+          const { notifications } = await response.json();
+          console.log('Fetched notifications:', notifications);
+
+          // Зберігаємо нотифікації в контекст
+          dispatch({ type: 'ADD_EVENT', payload: notifications });
+        } else {
+          console.error('Failed to fetch notifications:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [state?.token, dispatch]);
+
+  if (loading) {
+    return <p>Завантаження...</p>;
+  }
 
   return (
     <Page pageTitle="Notifications">
       <div className="notification-block">
         {userEvents.length > 0 ? (
-          userEvents.slice().reverse().map((event, index) => {
+          userEvents.slice().reverse().map((event: UserEvent, index: number) => {
             if (!event || !event.type) return null;
             let title = '';
             let icon = null;
@@ -62,7 +102,7 @@ export default function Notifications(): JSX.Element {
                 key={index}
                 icon={icon}
                 title={title}
-                timeAgo={getTimeAgo(event.time)}
+                timeAgo={getTimeAgo(event.time || null)}
                 type={event.type === 'login' ? 'Warning' : 'Success'}
               />
             );
@@ -74,5 +114,3 @@ export default function Notifications(): JSX.Element {
     </Page>
   );
 }
-
-//-----------------------------------------------

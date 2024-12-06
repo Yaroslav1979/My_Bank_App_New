@@ -17,13 +17,12 @@ const ReceiveSum: React.FC = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 
-  console.log('AuthContext:', authContext); // Логування контексту
-  console.log('User from AuthContext:', authContext?.state.user); //
+  // console.log('AuthContext:', authContext); // Логування контексту
+  // console.log('User from AuthContext:', authContext?.state.user); //
 
   const dispatch = authContext?.dispatch;
   
-  // Отримуємо userId безпосередньо з state
-  
+ 
 
   if (!authContext || !authContext.state.user?.id) {
     console.error('User ID is missing. Cannot proceed with payment.');
@@ -33,8 +32,7 @@ const ReceiveSum: React.FC = () => {
       </div>
     );
   }
-  // const userId = authContext.state.user.id;
-
+ 
   const handlePayment = async (paymentSystem: string) => {
     setError(null);
   
@@ -48,8 +46,6 @@ const ReceiveSum: React.FC = () => {
       type: 'credit', // Поповнення (credit)
       system: paymentSystem,
     };
-  
-    console.log("Sending request with data:", requestData);  // Логування даних
   
     try {
       const response = await fetch(`http://localhost:4000/balance-transaction/${authContext.state.user.id}`, {
@@ -72,7 +68,7 @@ const ReceiveSum: React.FC = () => {
         });
       }
   
-      navigate("/balance");  // Переходимо на сторінку балансу після успішного поповнення
+      navigate("/balance");  
     } catch (err: any) {
       setError(err.message);
     }

@@ -6,8 +6,8 @@ const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const User = require('../class/user');
-const TokenStore = require('../class/token-store'); // шлях до файлу зберігання токенів
-const balanceStore = require('../class/balance-store'); // шлях до файлу зберігання балансу
+const TokenStore = require('../class/token-store'); 
+const balanceStore = require('../class/balance-store'); 
 const router = express.Router();
 const notificationStore = require('../class/notification-store');
 
@@ -166,8 +166,6 @@ router.post('/user-enter', async function (req, res) {
   }
 });
 
-
-
 //--------------------------------------------
 
 // const nodemailer = require('nodemailer'); // For sending emails
@@ -239,10 +237,21 @@ router.post('/recovery-confirm', async (req, res) => {
     user.password = hashedPassword; 
     user.passwordResetCode = null; 
 
-    // Генерація JWT токена для авторизації
-    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: 86400 });
+    // Генерація JWT токена з балансом
+    const tokenPayload = { 
+      id: user.id, 
+      email: user.email, 
+      balance: user.balance // Додаємо баланс до токена
+    };
+
+    const token = jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: 86400 });
     TokenStore.saveToken(email, token);
-    res.json({ message: 'Пароль успішно відновлено', token });
+
+    res.json({ 
+      message: 'Пароль успішно відновлено', 
+      token, 
+      user: { id: user.id, email: user.email, balance: user.balance } 
+    });
   } catch (error) {
     console.error('Server error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -252,70 +261,11 @@ router.post('/recovery-confirm', async (req, res) => {
 // -------------------------------------------------
 
 router.put('/settings-email', async (req, res) => {
-  const { currentEmail, newEmail, password } = req.body;
+  const { userId, newEmail, password } = req.body;
   const token = req.headers['authorization'];
 
   if (!newEmail || !password) {
-    return res.status(400).json({ error: 'Заповніть поля Email та Password' });
-  }
-
-  if (!token) {
-    return res.status(401).json({ error: 'Токен не надано' });
-  }
-
-  try {
-    const tokenValue = token.split(' ')[1]; 
-    const decoded = jwt.verify(tokenValue, SECRET_KEY);
-
-    // Перевірка дійсності токена
-    if (!TokenStore.isValidToken(currentEmail, tokenValue)) {
-      return res.status(401).json({ error: 'Недійсний токен для цього email' });
-    }
-    if (decoded.id !== user.id) {
-      return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
-    }
-
-    // Шукаємо користувача по email
-    const user = User.getByEmail(currentEmail); 
-    if (!user) {
-      return res.status(404).json({ error: 'Користувача не знайдено' });
-    }
-
-    if (!user.verifyPassword(password)) {
-      return res.status(400).json({ error: 'Неправильний пароль' });
-    }
-
-    // Оновлюємо email користувача
-    user.email = newEmail; // оновлення email
-    console.log(`Email updated for user ID: ${user.id}`);
-
-    // Створюємо новий токен після зміни email
-    const newToken = jwt.sign({ id: user.id, email: newEmail }, SECRET_KEY, { expiresIn: 86400 });
-
-    // Оновлюємо токен у сховищі
-    TokenStore.deleteToken(currentEmail); // видаляємо старий токен
-    TokenStore.saveToken(newEmail, newToken); // зберігаємо новий токен
-
-    // Відправляємо новий токен на клієнт
-    res.status(200).json({
-      message: 'Email успішно змінено',
-      token: newToken, // Новий токен
-      user: { id: user.id, email: newEmail }, // Відправляємо оновленого користувача
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'На жаль, щось пішло не так' });
-  }
-});
-
-//-------------------------------------------------
-
-router.put('/settings-password', async (req, res) => {
-  const { oldPassword, newPassword } = req.body; 
-  const token = req.headers['authorization'];
-
-  if (!oldPassword || !newPassword) { 
-    return res.status(400).json({ error: "Всі поля є обов'язковими" });
+    return res.status(400).json({ error: 'Заповніть усі поля' });
   }
 
   if (!token) {
@@ -324,42 +274,90 @@ router.put('/settings-password', async (req, res) => {
 
   try {
     const tokenValue = token.split(' ')[1];
-    console.log("Token Value:", tokenValue);
-    
     const decoded = jwt.verify(tokenValue, SECRET_KEY);
-    console.log("Decoded:", decoded);
 
-    const user = User.getById(decoded.id);
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
+    }
+
+    const user = User.getById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Користувача не знайдено' });
     }
 
-    console.log("Found user:", user);
+    if (!user.verifyPassword(password)) {
+      return res.status(400).json({ error: 'Неправильний пароль' });
+    }
+
+    user.email = newEmail;
+    const newToken = jwt.sign({ id: user.id, email: newEmail }, SECRET_KEY, { expiresIn: 86400 });
+
+    TokenStore.deleteToken(user.email);
+    TokenStore.saveToken(newEmail, newToken);
+
+    res.status(200).json({
+      message: 'Email успішно змінено',
+      token: newToken,
+      user: { id: user.id, email: newEmail },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Щось пішло не так' });
+  }
+});
+
+//-------------------------------------------------------------
+
+router.put('/settings-password', async (req, res) => {
+  const { userId, oldPassword, newPassword } = req.body;
+  const token = req.headers['authorization'];
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ error: 'Заповніть усі поля' });
+  }
+
+  if (!token) {
+    return res.status(401).json({ error: 'Токен не надано' });
+  }
+
+  try {
+    const tokenValue = token.split(' ')[1];
+    const decoded = jwt.verify(tokenValue, SECRET_KEY);
+
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
+    }
+
+    const user = User.getById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Користувача не знайдено' });
+    }
 
     if (!user.verifyPassword(oldPassword)) {
       return res.status(400).json({ error: 'Неправильний старий пароль' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword
-    // User.update(user, { password: hashedPassword });
+    user.password = hashedPassword;
 
     const newToken = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: 86400 });
+
     TokenStore.deleteToken(user.email);
     TokenStore.saveToken(user.email, newToken);
 
     res.status(200).json({
       message: 'Пароль успішно змінено',
       token: newToken,
-      user: { ...user, password: undefined } 
+      user: { id: user.id, email: user.email },
     });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ error: 'Ой, щось пішло не так' });
+    res.status(500).json({ error: 'Щось пішло не так' });
   }
 });
 
-   //------------------------------------------------------------------
+//---------------------------------------------------------
+
    router.get('/balance/:userId', (req, res) => {
     const { userId } = req.params; // Отримуємо userId з параметрів URL
     console.log('User ID:', userId); // Логуємо отриманий userId
@@ -472,39 +470,21 @@ router.get('/notifications', (req, res) => {
   }
 
   const notifications = user.notificationStore.getNotifications(user.id);
+
+  if (notifications.length === 0) {
+    // Додаємо перший запис про новий вхід
+    const firstLoginNotification = {
+      type: 'login',
+      time: new Date().toISOString(),
+      userId: user.id,
+    };
+    user.notificationStore.addNotification(user.id, firstLoginNotification.type, {});
+    notifications.push(firstLoginNotification);
+  }
+
   res.json({ notifications });
 });
-//-----------------------------------------------------
-// router.get('/notifications', (req, res) => {
-//   const { token } = req.headers; // Токен отримується з заголовків
-//   if (!token) {
-//     return res.status(401).json({ error: 'Токен не надано' });
-//   }
 
-//   let decoded;
-//   try {
-//     decoded = jwt.verify(token, SECRET_KEY); // Розшифрування токена
-//   } catch (error) {
-//     return res.status(401).json({ error: 'Недійсний токен' });
-//   }
-
-//   const { userId } = req.query;
-//   if (!userId || decoded.id !== userId) {
-//     return res.status(401).json({ error: 'Недійсний токен для цього користувача' });
-//   }
-
-//   const userNotifications = notificationStore.getNotifications(userId);
-//   res.json({ notifications: userNotifications });
-// });
-
-// Додавання сповіщення для конкретного користувача
-// router.post('/notifications', (req, res) => {
-//   const { userId, type, time, details } = req.body;
-//   const notification = notificationStore.addNotification(userId, type, { time, ...details });
-//   res.status(201).json({ notification });
-// });
-//-------------------------------------------------
-// Додавання нового сповіщення
 router.post('/notifications', (req, res) => {
   const { token, type, details } = req.body;
 
@@ -513,9 +493,11 @@ router.post('/notifications', (req, res) => {
     return res.status(404).json({ error: 'Користувача не знайдено' });
   }
 
-  const notification = user.notificationStore.addNotification(user.id, type, details);
+  console.log(`Adding notification for user: ${user.id}, type: ${type}`);
+  const notification = user.notificationStore.addNotification(user.id, type, details); // Прив'язка до userId
   res.status(201).json({ notification });
 });
+
 
 
 // Експортуємо глобальний роутер

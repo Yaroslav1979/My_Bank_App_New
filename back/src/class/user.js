@@ -77,11 +77,11 @@ class User {
    // Отримання userId із токена
    static getUserIdFromToken(token) {
     try {
-      const decoded = jwt.verify(token, SECRET_KEY); // Розшифровка токена
-      return decoded.id; // Повертаємо userId
+      const decoded = jwt.verify(token, SECRET_KEY); 
+      return decoded.id; 
     } catch (error) {
       console.error('Невірний токен:', error.message);
-      return null; // Токен недійсний
+      return null; 
     }
   }
 
@@ -89,9 +89,9 @@ class User {
   static getUserByToken(token) {
     const userId = this.getUserIdFromToken(token);
     if (!userId) {
-      return null; // Невірний токен
+      return null; 
     }
-    return this.getById(userId); // Повертаємо користувача
+    return this.getById(userId); 
   }
 }
 

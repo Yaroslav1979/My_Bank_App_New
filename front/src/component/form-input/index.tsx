@@ -11,8 +11,7 @@ interface FormInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
-  icon?: string;
-  // disabled?: boolean; 
+  icon?: string;  
 }
 
 const FormInput: React.FC<FormInputProps> = ({ label, type, name, value, onChange,  onBlur, required = false, icon }) => {

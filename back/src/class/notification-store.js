@@ -27,6 +27,4 @@ class NotificationStore {
   }
 }
 
-// Створюємо екземпляр класу для використання в ендпоїнтах
-
 module.exports = NotificationStore;

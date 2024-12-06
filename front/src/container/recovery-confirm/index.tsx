@@ -43,37 +43,46 @@ const RecoveryConfirmPage: React.FC = () => {
       setSuccess(result.message);
 
       if (authContext && authContext.dispatch) {
-      
+        // Завантаження збереженого балансу користувача
+        const userId = result.user.id;
+        const balanceKey = `balance_${userId}`;
+        const storedBalance = parseFloat(localStorage.getItem(balanceKey) || '0');
+
+        // Завантаження історії подій
+        const eventsKey = `userEvents_${userId}`;
+        const storedEvents = JSON.parse(localStorage.getItem(eventsKey) || '[]');
+
         authContext.dispatch({
           type: 'LOGIN',
           payload: {
             token: result.token,
-            user: { email },
+            user: result.user,
+            balance: storedBalance,
+            userEvents: storedEvents,
           },
         });
 
-        
         navigate('/balance');
       }
     } catch (error) {
       setError('Password reset failed. Please try again.');
-      setVerificationCode(''); 
-      setNewPassword(''); 
-      document.getElementById('verificationCode')?.focus(); 
+      setVerificationCode('');
+      setNewPassword('');
+      document.getElementById('verificationCode')?.focus();
     }
   };
 
   return (
     <Page>
-      <div className="head">     
+      <div className="head">
         <Title>Recover Password</Title>
         <Subtitle>{'Enter the verification code and set your new password'}</Subtitle>
-      </div> 
-      
+      </div>
+
       <form className="form" onSubmit={handleSubmit}>
         <div className="form-container">
           <FormInput
-            // id="verificationCode" 
+            // id="verificationCode"
             label="Code"
             type="text"
             name="verificationCode"
@@ -97,7 +106,7 @@ const RecoveryConfirmPage: React.FC = () => {
         <Button type="submit" disabled={isButtonDisabled}>
           Restore password
         </Button>
-        
+
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
       </form>
