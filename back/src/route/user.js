@@ -7,25 +7,25 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const User = require('../class/user');
 const TokenStore = require('../class/token-store'); 
-const balanceStore = require('../class/balance-store'); 
+// const BalanceStore = require('../class/balance-store'); 
 const router = express.Router();
-const notificationStore = require('../class/notification-store');
+// const notificationStore = require('../class/notification-store');
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
 router.use(bodyParser.json());
 
 // const fetch = require('node-fetch');
-// const nodemailer = require('nodemailer'); 
+const nodemailer = require('nodemailer'); 
 
 // Встановіть конфігурацію для nodemailer
-// const transporter = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//     user: 'your-email@gmail.com',
-//     pass: 'your-email-password'
-//   }
-// });
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'yarico.rv@gmail.com',
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
 router.post('/user-create', function (req, res) {
   try {
@@ -49,31 +49,31 @@ router.post('/user-create', function (req, res) {
     
     User.add(newUser);
 
-    console.log('Новий користувач створений:', newUser, verificationCode);
+    // console.log('Новий користувач створений:', newUser, verificationCode);
 
     // Відправка коду верифікації електронною поштою
-    // const mailOptions = {
-    //   from: 'your-email@gmail.com',
-    //   to: email,
-    //   subject: 'Verification Code',
-    //   text: `Your verification code is: ${verificationCode}`
-    // };
+    const mailOptions = {
+      from: 'yarico.rv@gmail.com',
+      to: email,
+      subject: 'Verification Code',
+      text: `Your verification code is: ${verificationCode}`
+    };
 
-    // transporter.sendMail(mailOptions, function (error, info) {
-    //   if (error) {
-    //     console.error('Помилка при відправці коду верифікації:', error);
-    //     return res.status(500).json({
-    //       message: 'Не вдалося відправити код верифікації'
-    //     });
-    //   } else {
-        // console.log('Код верифікації відправлено: ' + info.response);
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.error('Помилка при відправці коду верифікації:', error);
+        return res.status(500).json({
+          message: 'Не вдалося відправити код верифікації'
+        });
+      } else {
+        console.log('Код верифікації відправлено: ' + info.response);
         return res.status(201).json({
           message: 'На ваш email надісланий код верифікації аккаунту.',
-          // user: newUser,
-          // token: newUser.token,
+          user: newUser,
+          token: newUser.token,
         });
-    //   }
-    // });
+      }
+    });
   }  catch (e) {
     console.error('Помилка при створенні аккаунту користувача:', e);
     return res.status(500).json({
@@ -93,7 +93,7 @@ router.post('/verify-email', function (req, res) {
 
       // Отримуємо вже існуючий токен
       const token = TokenStore.getToken(user.email);
-      console.log("Token:", token);
+      // console.log("Token:", token);
 //       
       return res.status(200).json({
         message: 'Електронну пошту успішно верифіковано',

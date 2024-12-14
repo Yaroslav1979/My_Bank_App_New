@@ -23,7 +23,7 @@ const BalancePage: React.FC = () => {
   useEffect(() => {
     const fetchBalanceData = async () => {
       if (!authContext?.state.user?.id) return; // Перевіряємо наявність userId
-      console.log('Token:', authContext.state.token);
+      // console.log('Token:', authContext.state.token);
       try {
         const response = await fetch(`http://localhost:4000/balance/${authContext.state.user.id}`, {
           method: 'GET',

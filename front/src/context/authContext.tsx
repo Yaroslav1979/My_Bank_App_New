@@ -59,8 +59,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       const { token, user } = action.payload;
       const userId = user?.id;
       const eventsKey = userId ? `userEvents_${userId}` : 'userEvents';
-      // const balanceKey = userId ? `balance_${userId}` : 'balance';
-
+      
       // Завантажуємо попередні події з localStorage
       const storedEvents = JSON.parse(localStorage.getItem(eventsKey) || '[]');
       const previousEvents: Event[] = Array.isArray(storedEvents)
@@ -73,9 +72,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
       // Зберігаємо події у localStorage
       localStorage.setItem(eventsKey, JSON.stringify(updatedUserEvents));
-
-      // Відновлення балансу
-      // const storedBalance = parseFloat(localStorage.getItem(balanceKey) || '0');
 
       return {
         ...state,

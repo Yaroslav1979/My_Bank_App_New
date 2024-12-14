@@ -27,7 +27,7 @@ class User {
   verifyPassword = (password) => bcrypt.compareSync(password, this.password); // Перевірка паролю
 
   static add = (user) => {
-    console.log('Adding user:', user);
+    // console.log('Adding user:', user);
     this.#list.push(user);
   };
 
