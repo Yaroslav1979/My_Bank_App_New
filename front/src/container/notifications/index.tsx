@@ -11,6 +11,10 @@ interface UserEvent {
   type: string;
   amount?: number;
   time?: string;
+  details?: {
+    from?: string; // Відправник, якщо є
+    system?: string; // Система переказу (наприклад, Stripe або Coinbase)
+  };
 }
 
 const getTimeAgo = (eventTime: string | null): string => {
@@ -86,7 +90,10 @@ export default function Notifications(): JSX.Element {
                 icon = <img src={IconSuccess} alt="Зміна пароля" className="notification__type-icon" />;
                 break;
               case 'credit':
-                title = `Ваш баланс поповнено на суму +${event.amount}`;
+                // title = `Ваш баланс поповнено на суму +${event.amount}`;
+                title = event.details?.from
+                ? `Ваш баланс поповнено на суму +${event.amount} від ${event.details.from}`
+                : `Ваш баланс поповнено на суму +${event.amount}`;
                 icon = <img src={IconSuccess} alt="Поповнення балансу" className="notification__type-icon" />;
                 break;
               case 'debit':

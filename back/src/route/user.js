@@ -22,7 +22,7 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'yarico.rv@gmail.com',
+    user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD
   }
 });
@@ -53,10 +53,10 @@ router.post('/user-create', function (req, res) {
 
     // Відправка коду верифікації електронною поштою
     const mailOptions = {
-      from: 'yarico.rv@gmail.com',
+      from: process.env.EMAIL_USERNAME,
       to: email,
-      subject: 'Verification Code',
-      text: `Your verification code is: ${verificationCode}`
+      subject: 'Код верифікації',
+      text: `Ваш код верифікації електронної пошти: ${verificationCode}`
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
@@ -168,17 +168,16 @@ router.post('/user-enter', async function (req, res) {
 
 //--------------------------------------------
 
-// const nodemailer = require('nodemailer'); // For sending emails
-
-// Your user model and other necessary imports
-
 router.post('/recovery', async (req, res) => {
   const { email } = req.body;  
+
+  console.log('Received email:', email);
 
   try {   
     const user = User.getByEmail(email);
 
     if (!user) {     
+      console.log(`No user found for email: ${email}`);
       return res.status(404).json({ message: 'Email not found' });
     }
 
@@ -186,28 +185,18 @@ router.post('/recovery', async (req, res) => {
 
     // Save the verification code in the user's record in the database
     user.passwordResetCode = newResetCode;
-    // await user.save();
+  
+     // Виведення коду в консоль замість відправки на email:
+    //  console.log(`Verification code for ${email}: ${newResetCode}`);
 
-     // Виведення коду в консоль замість відправки на email
-     console.log(`Verification code for ${email}: ${newResetCode}`);
+    const mailOptions = {
+      from: process.env.EMAIL_USERNAME,
+      to: email,
+      subject: 'Код відновлення парлю',
+      text: `Ваш код для відновлення паролю: ${newResetCode}`,
+    };
 
-    // Send the verification code to the user's email
-    // const transporter = nodemailer.createTransport({
-    //   service: 'Gmail', // or another email service
-    //   auth: {
-    //     user: process.env.EMAIL_USERNAME,
-    //     pass: process.env.EMAIL_PASSWORD,
-    //   },
-    // });
-
-    // const mailOptions = {
-    //   from: process.env.EMAIL_USERNAME,
-    //   to: email,
-    //   subject: 'Password Reset Request',
-    //   text: `Your verification code is: ${verificationCode}`,
-    // };
-
-    // await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
 
     res.json({ message: 'Verification code sent to your email' });
   } catch (error) {
@@ -391,13 +380,11 @@ router.put('/settings-password', async (req, res) => {
 // Додавання нової транзакції для конкретного користувача
 
 router.post('/balance-transaction/:userId', (req, res) => {
-  const { amount, type, address, system } = req.body;
-  const { userId } = req.params; // Отримуємо userId з параметра в URL
+  const { amount, type, address, system } = req.body; // `address` — email отримувача
+  const { userId } = req.params; // ID відправника
 
-  console.log("Отримано запит для користувача ID:", userId);
-  
   if (!amount || amount <= 0 || !type) {
-    return res.status(400).json({ success: false, error: 'Відсутні обов\'язкові параметри або некоректні значення' });
+    return res.status(400).json({ success: false, error: 'Некоректні дані транзакції' });
   }
 
   const token = req.headers.authorization?.split(' ')[1];
@@ -407,21 +394,42 @@ router.post('/balance-transaction/:userId', (req, res) => {
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    console.log("Токен верифіковано:", decoded);
-
-    // Перевірка, чи відповідає токен userId користувача
     if (Number(decoded.id) !== Number(userId)) {
       return res.status(401).json({ success: false, error: 'Токен не відповідає користувачу' });
     }
 
-    const user = User.getById(Number(userId)); // Отримуємо користувача
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Користувач не знайдений' });
+    const sender = User.getById(Number(userId));
+    if (!sender) {
+      return res.status(404).json({ success: false, error: 'Відправник не знайдений' });
     }
 
-    const newTransaction = user.balanceStore.addTransaction(userId, amount, type, address, system);
+    if (type === 'debit') {
+      // Перевіряємо, чи існує отримувач
+      const recipient = User.getByEmail(address);
+      if (!recipient) {
+        return res.status(404).json({ success: false, error: 'Отримувач не знайдений' });
+      }
 
-    return res.status(201).json({ success: true, transaction: newTransaction });
+      // Перевіряємо, чи у відправника достатньо коштів
+      const senderBalance = sender.balanceStore.getBalance(Number(userId));
+      if (senderBalance < amount) {
+        return res.status(400).json({ success: false, error: 'Недостатньо коштів для переказу' });
+      }
+
+      // Списуємо кошти у відправника
+      sender.balanceStore.addTransaction(Number(userId), amount, 'debit', address, system);
+
+      // Зараховуємо кошти отримувачу
+      recipient.balanceStore.addTransaction(recipient.id, amount, 'credit', userId, system);
+
+      return res.status(201).json({ success: true, message: 'Переказ виконано успішно' });
+    } else if (type === 'credit') {
+      // Обробка поповнення балансу (існуюча логіка)
+      const newTransaction = sender.balanceStore.addTransaction(userId, amount, type, address, system);
+      return res.status(201).json({ success: true, transaction: newTransaction });
+    }
+
+    return res.status(400).json({ success: false, error: 'Невідомий тип транзакції' });
   } catch (error) {
     console.error("Помилка:", error.message);
     return res.status(401).json({ success: false, error: 'Невалідний токен' });
@@ -484,7 +492,7 @@ router.get('/notifications', (req, res) => {
 
   res.json({ notifications });
 });
-
+//-------------------------------------------------------------------
 router.post('/notifications', (req, res) => {
   const { token, type, details } = req.body;
 

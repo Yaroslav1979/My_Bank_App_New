@@ -41,7 +41,7 @@ const RecoveryPage: React.FC = () => {
       navigate('/recovery-confirm', { state: { email } }); 
     } catch (error) {
       console.error('Error:', error); 
-      setError('Email not found. Please try again.');
+      setError('Something went wrong. Please try again.');
     }
   };
 
